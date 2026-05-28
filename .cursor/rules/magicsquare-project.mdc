@@ -1,0 +1,37 @@
+## Project
+
+- Name: MagicSquare
+- Language: Python
+- Purpose: MagicSquare 문제 풀이/도메인 구현
+
+## Constraints (high level)
+
+- PEP8 엄격 준수
+- Type hints 필수(모든 함수 파라미터/반환값)
+- ECB(boundary/control/entity) 아키텍처 준수
+- Dual-Track TDD 및 RED → GREEN → REFACTOR 사이클 준수
+- `print()` 디버깅 금지
+- 테스트 약화 금지
+
+## Recommended file structure
+
+```
+MagicSquare_23/
+├─ src/
+│  └─ magicsquare/
+│     ├─ boundary/
+│     │  ├─ cli/
+│     │  └─ api/
+│     ├─ control/
+│     └─ entity/
+├─ tests/
+│  ├─ boundary/
+│  ├─ control/
+│  └─ entity/
+├─ pyproject.toml (또는 requirements.txt)
+└─ README.md
+```
+
+- `boundary/control/entity` 디렉터리는 항상 분리한다.
+- `tests`는 ECB 레이어 구조를 미러링한다(테스트 찾기/리뷰 용이).
+
