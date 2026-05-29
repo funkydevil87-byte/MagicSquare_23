@@ -6,6 +6,7 @@ from pydantic import BaseModel
 
 INVALID_SIZE_CODE = "INVALID_SIZE"
 INVALID_SIZE_MESSAGE = "Grid must be 4x4."
+GRID_SIZE = 4
 
 
 class FailureResult(BaseModel):

@@ -4,7 +4,11 @@ from __future__ import annotations
 
 from typing import Any
 
-from magicsquare.boundary.schemas import INVALID_SIZE_CODE, INVALID_SIZE_MESSAGE
+from magicsquare.boundary.schemas import (
+    GRID_SIZE,
+    INVALID_SIZE_CODE,
+    INVALID_SIZE_MESSAGE,
+)
 from tests.boundary.conftest import FailureResult
 
 
@@ -18,6 +22,11 @@ class InputValidator:
                 message=INVALID_SIZE_MESSAGE,
             )
         if grid == []:
+            return FailureResult(
+                code=INVALID_SIZE_CODE,
+                message=INVALID_SIZE_MESSAGE,
+            )
+        if isinstance(grid, list) and any(len(row) != GRID_SIZE for row in grid):
             return FailureResult(
                 code=INVALID_SIZE_CODE,
                 message=INVALID_SIZE_MESSAGE,
