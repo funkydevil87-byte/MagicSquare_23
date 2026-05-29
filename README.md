@@ -120,7 +120,7 @@ Track A 상세 테스트 계획: [`docs/test_plan.md`](docs/test_plan.md)
 
 ### 환경·품질
 
-- [x] `python -m pytest` 실행 환경 확인 (**65 passed**)
+- [x] `python -m pytest` 실행 환경 확인 (**78 passed**)
 - [x] AAA 패턴, Error Message **완전 일치**(`==`) 검증
 - [x] core 커버리지 **≥85%** (`screen/app.py` 제외, `pytest-cov`)
 
@@ -189,6 +189,36 @@ Track A 상세 테스트 계획: [`docs/test_plan.md`](docs/test_plan.md)
 
 ---
 
+## RED 단계 To-Do 리스트
+
+### Golden Master 회귀 안전장치
+
+Refactoring 시작 전 구축.
+GREEN 완료 후 즉시 적용.
+
+#### 기준 파일 생성
+
+- [x] **GM-01**: `tests/golden_master_expected.txt` 생성
+- [x] **GM-02**: 정상/역순/오류 시나리오 추가
+- [x] **GM-03**: `git add tests/golden_master_expected.txt`
+
+#### 테스트 코드
+
+- [x] **GM-04**: `tests/boundary/test_golden_master_magic_square.py` 작성
+- [x] **GM-05**: approve 패턴 적용 (`GOLDEN_MASTER_APPROVE=1`)
+- [x] **GM-06**: Golden Master 테스트 PASS 확인 (`pytest -m golden_master -v`)
+
+#### 회귀 보호
+
+- [x] **GM-07**: row-major 규칙 보호 (GM-TC-01/02)
+- [x] **GM-08**: 1-index 출력 보호 (GM-TC-01/02)
+- [x] **GM-09**: reverse 조합 fallback 보호 (GM-TC-02)
+- [x] **GM-10**: Error Contract 보호 (GM-TC-03~05)
+
+> 설계: [`docs/golden_master_design.md`](docs/golden_master_design.md) · 실행 예시: [`docs/golden_master_execution_example.txt`](docs/golden_master_execution_example.txt)
+
+---
+
 ## 8. Quality Gates
 
 | 항목 | 기준 |
@@ -209,7 +239,9 @@ MagicSquare_23/
 ├── pyproject.toml                     ← pytest 설정 (pythonpath=src)
 ├── docs/
 │   ├── PRD_MagicSquare.md             ← PRD v1.1
-│   └── test_plan.md                   ← Track A Boundary 테스트 계획
+│   ├── test_plan.md                   ← Track A Boundary 테스트 계획
+│   ├── golden_master_design.md        ← Golden Master approve 패턴 설계
+│   └── golden_master_execution_example.txt
 ├── defect_list.md                     ← RED 결함·회귀 추적 (QA)
 ├── Report/
 │   ├── 01.MagicSquare_ProblemDefinition_Report.md
@@ -225,7 +257,8 @@ MagicSquare_23/
 │   ├── 12.MagicSquare_TrackA_GREEN_Planning_Checklist_Report.md
 │   ├── 13.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Report.md
 │   ├── 14.MagicSquare_TrackB_GREEN_and_GUI_Report.md
-│   └── 15.MagicSquare_FR01_E2E_Full_GREEN_Report.md
+│   ├── 15.MagicSquare_FR01_E2E_Full_GREEN_Report.md
+│   └── 16.MagicSquare_Golden_Master_Regression_Report.md
 ├── Prompting/                         ← 워크숍 프롬프트·트랜스크립트
 │   ├── 05.MagicSquare_TrackA_RED_Test_Transcript.md
 │   ├── 06.MagicSquare_DualTrack_RED_Design_Transcript.md
@@ -234,14 +267,17 @@ MagicSquare_23/
 │   ├── 09.MagicSquare_TrackA_GREEN_Planning_Checklist_Transcript.md  (+ 01~04)
 │   ├── 10.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Transcript.md
 │   ├── 11.MagicSquare_TrackB_GREEN_and_GUI_Transcript.md
-│   └── 12.MagicSquare_FR01_E2E_Full_GREEN_Transcript.md
+│   ├── 12.MagicSquare_FR01_E2E_Full_GREEN_Transcript.md
+│   └── 13.MagicSquare_Golden_Master_Regression_Transcript.md
 ├── src/magicsquare/
 │   ├── boundary/                      ← Boundary + screen GUI
 │   ├── control/                       ← SolvePartialMagicSquare
 │   └── entity/                        ← Domain services
 ├── tests/
 │   ├── conftest.py                    ← G0~G3 fixtures
-│   ├── boundary/                      ← Track A GREEN + E2E
+│   ├── boundary/                      ← Track A GREEN + E2E + Golden Master
+│   ├── golden_master_helper.py        ← GM 캡처·approve·contract 검증
+│   ├── golden_master_expected.txt     ← GM 기준 파일 (버전 관리)
 │   └── entity/                        ← Track B GREEN
 └── .cursor/
     ├── rules/                         ← 프로젝트 Cursor Rules
@@ -297,6 +333,7 @@ MagicSquare_23/
 | [Report/07 — README TDD 선언](Report/07.MagicSquare_README_TDD_Start_Report.md) | README 작성 세션 · 15 Scenario 추적 보드 |
 | [docs/PRD_MagicSquare.md](docs/PRD_MagicSquare.md) | 구현 전 요구사항 · FR · AC · Traceability |
 | [docs/test_plan.md](docs/test_plan.md) | Track A Boundary RED 테스트 계획 |
+| [docs/golden_master_design.md](docs/golden_master_design.md) | Golden Master approve 패턴 · GM-TC-01~05 |
 | [defect_list.md](defect_list.md) | RED 실행 결함 목록 · 회귀 체크리스트 |
 | [Report/08 — Track A RED·결함](Report/08.MagicSquare_TrackA_RED_Test_and_Defect_Report.md) | RED 테스트·결함 세션 보고서 |
 | [Prompting/05 — Track A RED Transcript](Prompting/05.MagicSquare_TrackA_RED_Test_Transcript.md) | Track A RED·결함 세션 Transcript |
@@ -312,7 +349,8 @@ MagicSquare_23/
 | [Prompting/10 — GREEN 완료 Transcript](Prompting/10.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Transcript.md) | AC-FR-01-01 GREEN 완료 세션 Transcript |
 | [Report/14 — Track B GREEN·GUI](Report/14.MagicSquare_TrackB_GREEN_and_GUI_Report.md) | Entity/Control GREEN + tkinter GUI |
 | [Report/15 — FR-01·E2E Full GREEN](Report/15.MagicSquare_FR01_E2E_Full_GREEN_Report.md) | FR-01·test_u_*·E2E·D-T22·회귀 세션 |
-| [Prompting/12 — Full GREEN Transcript](Prompting/12.MagicSquare_FR01_E2E_Full_GREEN_Transcript.md) | 본 세션 Transcript |
+| [Report/16 — Golden Master](Report/16.MagicSquare_Golden_Master_Regression_Report.md) | GM-01~GM-10 회귀 안전장치 구축 |
+| [Prompting/13 — Golden Master Transcript](Prompting/13.MagicSquare_Golden_Master_Regression_Transcript.md) | Golden Master 세션 Transcript |
 
 ### Open Questions (미해결)
 
@@ -335,6 +373,9 @@ python -m pytest
 # 커버리지 (screen GUI 제외)
 python -m pytest --cov=src/magicsquare --cov-report=term-missing
 
+# Golden Master 회귀 테스트
+python -m pytest -m golden_master -v
+
 # GUI 수동 확인
 python -m magicsquare.boundary.screen.app
 ```
@@ -350,7 +391,7 @@ python -m magicsquare.boundary.screen.app
 | 2026-05-29 | Track A GREEN 계획·README §7 GREEN TODO · Report/12 · Prompting/09 |
 | 2026-05-29 | GREEN-01 (`grid=[]`) · GREEN-02 (`grid=None`) 완료 · AC-FR-01-01 **17/29** passed |
 | 2026-05-29 | GREEN-W3/W4 완료 · AC-FR-01-01 **29/29** passed · Control `MagicSquareSolver` 스텁 |
-| 2026-05-29 | Report/13 · Prompting/10 — AC-FR-01-01 GREEN 완료 세션 Export |
+| 2026-05-29 | Golden Master GM-01~GM-10 · Report/16 · Prompting/13 · 78 tests passed |
 
 ---
 

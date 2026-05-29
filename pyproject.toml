@@ -23,6 +23,9 @@ where = ["src"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "-q"
+markers = [
+    "golden_master: Golden Master / Approval regression tests (GM-1, GM-2)",
+]
 
 [tool.coverage.run]
 source = ["src/magicsquare"]
