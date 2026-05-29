@@ -3,10 +3,15 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from pydantic import BaseModel
 
-PRD_INVALID_SIZE_CODE = "INVALID_SIZE"
-PRD_INVALID_SIZE_MESSAGE = "Grid must be 4x4."
+from magicsquare.boundary.schemas import (
+    INVALID_SIZE_CODE,
+    INVALID_SIZE_MESSAGE,
+    FailureResult,
+)
+
+PRD_INVALID_SIZE_CODE = INVALID_SIZE_CODE
+PRD_INVALID_SIZE_MESSAGE = INVALID_SIZE_MESSAGE
 
 RESOLVE_PATCH = "magicsquare.control.magic_square_solver.MagicSquareSolver.resolve"
 
@@ -17,13 +22,6 @@ GRID_3X4: list[list[int]] = [
 ]
 
 GRID_EMPTY_COLS: list[list[int]] = [[]] * 4
-
-
-class FailureResult(BaseModel):
-    """Expected failure payload contract for AC-FR-01-01 RED tests."""
-
-    code: str
-    message: str
 
 
 if TYPE_CHECKING:

@@ -140,7 +140,7 @@ Track A 상세 테스트 계획: [`docs/test_plan.md`](docs/test_plan.md)
 #### GREEN-W0 — 스키마·조기 반환 (기반)
 
 - [x] `src/magicsquare/boundary/schemas.py` — `FailureResult`, `INVALID_SIZE_CODE`, `INVALID_SIZE_MESSAGE` 고정
-- [ ] `src/magicsquare/boundary/input_validator.py` — `tests` import 제거, `schemas` 사용 *(REFACTOR 후속)*
+- [x] `src/magicsquare/boundary/input_validator.py` — `tests` import 제거, `schemas` 사용 *(REFACTOR 완료)*
 - [x] `MagicSquareBoundary.solve()` — 검증 실패 시 `FailureResult` **조기 반환**, Domain/Control 미진입
 - [x] 검증: `pytest tests/boundary/test_ac_fr_01_01_contract_violation.py::TestScopeLimitation -q` → 6 passed
 
