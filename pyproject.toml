@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "magicsquare"
+version = "0.0.0"
+requires-python = ">=3.10"
+dependencies = [
+    "pydantic>=2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q"
+markers = [
+    "golden_master: Golden Master / Approval regression tests (GM-1, GM-2)",
+]
+
+[tool.coverage.run]
+source = ["src/magicsquare"]
+omit = ["*/boundary/screen/app.py"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+

@@ -1,0 +1,47 @@
+## Testing
+
+- Framework: pytest
+- Test pattern: AAA (Arrange-Act-Assert)
+- Coverage minimum: 80%
+
+## TDD rules: RED → GREEN → REFACTOR
+
+### RED
+
+- 새 기능/동작 추가 전 테스트를 먼저 작성한다.
+- 테스트가 실패(RED)함을 확인한 뒤에만 GREEN으로 진행한다.
+- 실패 원인이 기대한 이유(새 기능 미구현)인지 확인한다.
+- Must not
+  - RED 확인 없이 구현 코드를 추가/변경하지 않는다.
+  - 테스트를 skip/삭제하거나 assertion을 약화해 RED를 회피하지 않는다.
+
+### GREEN
+
+- 현재 실패한 테스트를 통과시키는 데 필요한 최소 코드만 작성한다.
+- 의도적으로 과도한 일반화/추가 기능을 넣지 않는다.
+- 모든 테스트가 GREEN이 되면 즉시 REFACTOR로 전환한다.
+- Must not
+  - 리팩터링(구조 개선/정리/중복 제거)을 수행하지 않는다.
+  - 미래 요구를 위한 일반화/추상화를 선제적으로 추가하지 않는다.
+
+### REFACTOR
+
+- 외부 관찰 가능한 동작 변경 없이 코드 구조를 개선한다.
+- 리팩터링 전후로 모든 테스트가 통과해야 한다.
+- 테스트 커버리지와 검증 강도를 유지한다.
+- Must not
+  - 테스트 커버리지/검증 강도를 낮추는 변경(삭제, 완화, skip)을 하지 않는다.
+  - 동작 변경이 필요한 수정은 새 RED 테스트부터 다시 시작한다.
+
+## Fixtures
+
+- 기본은 function 스코프를 사용한다.
+- module/session 스코프는 성능상 필요하고 테스트 간 독립성이 유지될 때만 사용한다.
+- fixture는 테스트의 Arrange를 단순화하는 목적에 한정한다(과도한 추상화 금지).
+
+## Naming conventions
+
+- 테스트 함수는 `test_` 접두사 필수
+- 테스트 파일은 `test_*.py` 또는 `*_test.py` 중 한 가지로 통일(프로젝트에서 1개 선택)
+- AAA 섹션이 코드로 구분되도록 Arrange/Act/Assert 순서를 유지
+

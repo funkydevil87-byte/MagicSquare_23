@@ -1,0 +1,11 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.13.13, pytest-9.0.3, pluggy-1.6.0
+rootdir: C:\dev\MagicSquare_23
+configfile: pyproject.toml
+testpaths: tests
+plugins: cov-7.1.0
+collected 78 items / 65 deselected / 13 selected
+
+tests\boundary\test_golden_master_magic_square.py .............          [100%]
+
+====================== 13 passed, 65 deselected in 0.20s ======================
