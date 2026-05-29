@@ -26,6 +26,11 @@ class InputValidator:
                 code=INVALID_SIZE_CODE,
                 message=INVALID_SIZE_MESSAGE,
             )
+        if isinstance(grid, list) and len(grid) != GRID_SIZE:
+            return FailureResult(
+                code=INVALID_SIZE_CODE,
+                message=INVALID_SIZE_MESSAGE,
+            )
         if isinstance(grid, list) and any(len(row) != GRID_SIZE for row in grid):
             return FailureResult(
                 code=INVALID_SIZE_CODE,
