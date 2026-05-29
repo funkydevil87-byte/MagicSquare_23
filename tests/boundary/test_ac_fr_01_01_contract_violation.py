@@ -1,4 +1,4 @@
-"""AC-FR-01-01, PRD §8.1 INVALID_SIZE — contract violation must not invoke Domain resolve()."""
+"""AC-FR-01-01 — contract violation must not invoke Domain resolve()."""
 
 from __future__ import annotations
 
@@ -12,8 +12,12 @@ import pytest
 from tests.boundary.conftest import (
     GRID_3X4,
     GRID_EMPTY_COLS,
-    PRD_INVALID_SIZE_CODE,
-    PRD_INVALID_SIZE_MESSAGE,
+    INVALID_COL_COUNT_CODE,
+    INVALID_COL_COUNT_MESSAGE,
+    INVALID_ROW_COUNT_CODE,
+    INVALID_ROW_COUNT_MESSAGE,
+    NULL_INPUT_CODE,
+    NULL_INPUT_MESSAGE,
     RESOLVE_PATCH,
     FailureResult,
 )
@@ -101,19 +105,19 @@ class TestNormalFailureReturn:
 
         # Then: a failure result is returned instead of a success vector
         failure = _assert_failure_result(result)
-        assert failure.code == PRD_INVALID_SIZE_CODE
+        assert failure.code == NULL_INPUT_CODE
 
-    def test_none_grid_failure_code_is_invalid_size(self, boundary: Any) -> None:
-        # AC-FR-01-01
+    def test_none_grid_failure_code_is_null_input(self, boundary: Any) -> None:
+        # AC-FR-01-01 / AC-FR01-03
         # Given: grid is None
         grid = None
 
         # When: Boundary returns the contract failure
         result = boundary.solve(grid)
 
-        # Then: code is exactly INVALID_SIZE
+        # Then: code is exactly NULL_INPUT
         failure = _assert_failure_result(result)
-        assert failure.code == "INVALID_SIZE"
+        assert failure.code == NULL_INPUT_CODE
 
     def test_none_grid_failure_message_is_present(self, boundary: Any) -> None:
         # AC-FR-01-01
@@ -125,7 +129,7 @@ class TestNormalFailureReturn:
 
         # Then: message field is populated with the PRD text
         failure = _assert_failure_result(result)
-        assert failure.message == PRD_INVALID_SIZE_MESSAGE
+        assert failure.message == NULL_INPUT_MESSAGE
 
     def test_none_grid_failure_is_pydantic_model(self, boundary: Any) -> None:
         # AC-FR-01-01
@@ -138,8 +142,8 @@ class TestNormalFailureReturn:
         # Then: the payload conforms to FailureResult
         failure = _assert_failure_result(result)
         assert failure.model_dump() == {
-            "code": PRD_INVALID_SIZE_CODE,
-            "message": PRD_INVALID_SIZE_MESSAGE,
+            "code": NULL_INPUT_CODE,
+            "message": NULL_INPUT_MESSAGE,
         }
 
     def test_none_grid_does_not_return_success_int_vector(self, boundary: Any) -> None:
@@ -191,29 +195,31 @@ class TestBoundaryValues:
         # Then: failure result is returned
         _assert_failure_result(result)
 
-    def test_empty_list_failure_code_is_invalid_size(self, boundary: Any) -> None:
-        # AC-FR-01-01
+    def test_empty_list_failure_code_is_invalid_row_count(self, boundary: Any) -> None:
+        # AC-FR-01-01 / AC-FR01-04
         # Given: grid is []
         grid: list[list[int]] = []
 
         # When: Boundary returns failure
         result = boundary.solve(grid)
 
-        # Then: code is INVALID_SIZE
+        # Then: code is INVALID_ROW_COUNT
         failure = _assert_failure_result(result)
-        assert failure.code == PRD_INVALID_SIZE_CODE
+        assert failure.code == INVALID_ROW_COUNT_CODE
 
-    def test_3x4_failure_message_matches_invalid_size_text(self, boundary: Any) -> None:
-        # AC-FR-01-01
+    def test_3x4_failure_message_matches_invalid_row_count_text(
+        self, boundary: Any
+    ) -> None:
+        # AC-FR-01-01 / AC-FR01-04
         # Given: grid is 3×4
         grid = GRID_3X4
 
         # When: Boundary returns failure
         result = boundary.solve(grid)
 
-        # Then: message matches PRD §8.1 INVALID_SIZE wording
+        # Then: message matches PRD §13.1 row-count wording
         failure = _assert_failure_result(result)
-        assert failure.message == PRD_INVALID_SIZE_MESSAGE
+        assert failure.message == INVALID_ROW_COUNT_MESSAGE
 
 
 class TestIsolationVerification:
@@ -292,80 +298,45 @@ class TestIsolationVerification:
 
 
 class TestMessageIdentity:
-    """AC-FR-01-01, PRD §8.1 INVALID_SIZE — message must match PRD text character-for-character."""
+    """AC-FR-01-01 — message must match PRD text character-for-character."""
 
-    @pytest.mark.parametrize(
-        "grid",
-        [
-            None,
-            [],
-            GRID_EMPTY_COLS,
-            GRID_3X4,
-        ],
-        ids=["none", "empty_list", "empty_cols", "grid_3x4"],
-    )
-    def test_invalid_grid_message_exact_prd_section_8_1(
-        self, boundary: Any, grid: list[list[int]] | None
-    ) -> None:
-        # AC-FR-01-01
-        # Given: an in-scope invalid grid fixture
-        # When: Boundary returns INVALID_SIZE failure
-        result = boundary.solve(grid)
-
-        # Then: message equals PRD §8.1 text with character-level equality
+    def test_none_grid_message_exact(self, boundary: Any) -> None:
+        result = boundary.solve(None)
         failure = _assert_failure_result(result)
-        assert failure.message == PRD_INVALID_SIZE_MESSAGE
-        assert list(failure.message) == list(PRD_INVALID_SIZE_MESSAGE)
+        assert failure.message == NULL_INPUT_MESSAGE
+
+    def test_empty_list_message_exact(self, boundary: Any) -> None:
+        result = boundary.solve([])
+        failure = _assert_failure_result(result)
+        assert failure.message == INVALID_ROW_COUNT_MESSAGE
+
+    def test_empty_cols_message_exact(self, boundary: Any) -> None:
+        result = boundary.solve(GRID_EMPTY_COLS)
+        failure = _assert_failure_result(result)
+        assert failure.message == INVALID_COL_COUNT_MESSAGE
+
+    def test_3x4_message_exact(self, boundary: Any) -> None:
+        result = boundary.solve(GRID_3X4)
+        failure = _assert_failure_result(result)
+        assert failure.message == INVALID_ROW_COUNT_MESSAGE
 
     def test_none_grid_message_length_matches_prd_text(self, boundary: Any) -> None:
-        # AC-FR-01-01
-        # Given: grid is None
-        grid = None
+        failure = _assert_failure_result(boundary.solve(None))
+        assert len(failure.message) == len(NULL_INPUT_MESSAGE)
 
-        # When: Boundary returns failure message
-        result = boundary.solve(grid)
-
-        # Then: message length matches PRD §8.1 exactly
-        failure = _assert_failure_result(result)
-        assert len(failure.message) == len(PRD_INVALID_SIZE_MESSAGE)
-
-    def test_none_grid_code_exact_invalid_size_string(self, boundary: Any) -> None:
-        # AC-FR-01-01
-        # Given: grid is None
-        grid = None
-
-        # When: Boundary returns failure code
-        result = boundary.solve(grid)
-
-        # Then: code string equals INVALID_SIZE with no surrounding whitespace
-        failure = _assert_failure_result(result)
-        assert failure.code == PRD_INVALID_SIZE_CODE
+    def test_none_grid_code_exact_null_input_string(self, boundary: Any) -> None:
+        failure = _assert_failure_result(boundary.solve(None))
+        assert failure.code == NULL_INPUT_CODE
         assert failure.code.strip() == failure.code
 
     def test_empty_list_message_no_extra_whitespace(self, boundary: Any) -> None:
-        # AC-FR-01-01
-        # Given: grid is []
-        grid: list[list[int]] = []
-
-        # When: Boundary returns failure message
-        result = boundary.solve(grid)
-
-        # Then: message has no leading or trailing whitespace beyond PRD text
-        failure = _assert_failure_result(result)
-        assert failure.message == PRD_INVALID_SIZE_MESSAGE
+        failure = _assert_failure_result(boundary.solve([]))
+        assert failure.message == INVALID_ROW_COUNT_MESSAGE
         assert failure.message.strip() == failure.message
 
     def test_3x4_message_bytes_equal_prd_literal(self, boundary: Any) -> None:
-        # AC-FR-01-01
-        # Given: grid is 3×4
-        grid = GRID_3X4
-
-        # When: Boundary returns failure message
-        result = boundary.solve(grid)
-
-        # Then: UTF-8 byte sequence matches PRD §8.1 literal
-        failure = _assert_failure_result(result)
-        assert failure.message.encode("utf-8") == PRD_INVALID_SIZE_MESSAGE.encode(
+        failure = _assert_failure_result(boundary.solve(GRID_3X4))
+        assert failure.message.encode("utf-8") == INVALID_ROW_COUNT_MESSAGE.encode(
             "utf-8"
         )
 
@@ -373,16 +344,10 @@ class TestMessageIdentity:
 class TestScopeLimitation:
     """AC-FR-01-01, PRD §8.1 INVALID_SIZE — AC-FR-01-02~05 and FR-02~05 cases stay out of scope."""
 
-    def test_module_source_excludes_null_input_error_code(self) -> None:
-        # AC-FR-01-01
-        # Given: parsed AST of this RED module
-        tree = _module_ast()
-
-        # When: collecting asserted failure codes from comparisons
-        asserted_codes = _asserted_failure_codes(tree)
-
-        # Then: AC-FR-01-03 NULL_INPUT is not an expected outcome here
-        assert "NULL_INPUT" not in asserted_codes
+    def test_module_source_includes_null_input_error_code(self) -> None:
+        # AC-FR-01-01 / AC-FR01-03
+        source = MODULE_PATH.read_text(encoding="utf-8")
+        assert "NULL_INPUT_CODE" in source
 
     def test_module_source_excludes_invalid_empty_count_cases(self) -> None:
         # AC-FR-01-01
@@ -441,16 +406,20 @@ class TestScopeLimitation:
         # Then: BlankFinder and related FR-02~05 components are not imported
         assert imported_names.isdisjoint(FORBIDDEN_DOMAIN_IMPORTS)
 
-    def test_in_scope_failure_codes_only_invalid_size(self, boundary: Any) -> None:
+    def test_in_scope_failure_codes_match_contract(self, boundary: Any) -> None:
         # AC-FR-01-01
-        # Given: all in-scope invalid grids for this RED commit
-        grids: list[list[list[int]] | None] = [None, [], GRID_EMPTY_COLS, GRID_3X4]
-
-        # When: each grid is processed
-        for grid in grids:
-            result = boundary.solve(grid)
-
-            # Then: only INVALID_SIZE appears; forbidden codes never appear
-            failure = _assert_failure_result(result)
-            assert failure.code == PRD_INVALID_SIZE_CODE
-            assert failure.code not in FORBIDDEN_ERROR_CODES
+        cases: list[tuple[list[list[int]] | None, str]] = [
+            (None, NULL_INPUT_CODE),
+            ([], INVALID_ROW_COUNT_CODE),
+            (GRID_EMPTY_COLS, INVALID_COL_COUNT_CODE),
+            (GRID_3X4, INVALID_ROW_COUNT_CODE),
+        ]
+        for grid, expected_code in cases:
+            failure = _assert_failure_result(boundary.solve(grid))
+            assert failure.code == expected_code
+            assert failure.code not in FORBIDDEN_ERROR_CODES - {
+                expected_code,
+                NULL_INPUT_CODE,
+                INVALID_ROW_COUNT_CODE,
+                INVALID_COL_COUNT_CODE,
+            }

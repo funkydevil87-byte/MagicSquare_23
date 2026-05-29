@@ -1,51 +1,84 @@
-"""U-FLOW-02 — invalid input must not invoke Control.execute. Track A RED skeleton."""
+"""U-FLOW-02 — invalid input must not invoke Control.execute."""
 
 from __future__ import annotations
 
+from typing import Any
+from unittest.mock import patch
+
 import pytest
 
-# Control mock/spy (U-FLOW only):
-# from magicsquare.boundary.ui_boundary import UIBoundary
-# EXECUTE_PATCH = (
-#     "magicsquare.control.solve_partial_magic_square.SolvePartialMagicSquare.execute"
-# )
-# @patch(EXECUTE_PATCH)
+from tests.boundary.conftest import (
+    DUPLICATE_VALUE_CODE,
+    EXECUTE_PATCH,
+    GRID_3X4,
+    GRID_DUPLICATE,
+    GRID_EMPTY_COLS,
+    GRID_MINUS_ONE,
+    GRID_NO_BLANKS,
+    GRID_THREE_BLANKS,
+    INVALID_COL_COUNT_CODE,
+    INVALID_EMPTY_COUNT_CODE,
+    INVALID_ROW_COUNT_CODE,
+    NULL_INPUT_CODE,
+    OUT_OF_RANGE_CODE,
+    FailureResult,
+)
+
+
+def _assert_failure(result: Any, code: str) -> FailureResult:
+    assert isinstance(result, FailureResult)
+    assert result.code == code
+    return result
 
 
 class TestUFlow02DomainIsolation:
-    """FR-01 + AC-FR01-01 — short-circuit invalid → execute.call_count == 0 + E envelope."""
+    """FR-01 + AC-FR01-01 — short-circuit invalid → execute.call_count == 0."""
 
-    def test_u_flow_02a_null_matrix_execute_zero_e003(self) -> None:
-        # U-FLOW-02a
-        # Given: matrix is None; execute spied
-        # boundary = UIBoundary()
-        # When: boundary.solve(None)
-        pytest.fail("RED: U-FLOW-02a — null → E003 envelope, execute 0×")
+    @patch(EXECUTE_PATCH)
+    def test_u_flow_02a_null_matrix_execute_zero_e003(
+        self, execute_mock: Any, boundary: Any
+    ) -> None:
+        result = boundary.solve(None)
+        _assert_failure(result, NULL_INPUT_CODE)
+        execute_mock.assert_not_called()
 
-    def test_u_flow_02b_invalid_size_execute_zero_e001(self) -> None:
-        # U-FLOW-02b
-        # Given: size ≠ 4×4 (e.g. 3×4); execute spied
-        # boundary = UIBoundary()
-        # When: boundary.solve(grid_3x4)
-        pytest.fail("RED: U-FLOW-02b — invalid size → E001 envelope, execute 0×")
+    @patch(EXECUTE_PATCH)
+    def test_u_flow_02b_invalid_size_execute_zero_e001(
+        self, execute_mock: Any, boundary: Any
+    ) -> None:
+        result = boundary.solve(GRID_3X4)
+        _assert_failure(result, INVALID_ROW_COUNT_CODE)
+        execute_mock.assert_not_called()
 
-    def test_u_flow_02c_invalid_blank_count_execute_zero_e002(self) -> None:
-        # U-FLOW-02c
-        # Given: blank count ≠ 2 (0 or 3 zeros); execute spied
-        # boundary = UIBoundary()
-        # When: boundary.solve(grid_bad_blank_count)
-        pytest.fail("RED: U-FLOW-02c — blank count ≠ 2 → E002 envelope, execute 0×")
+    @patch(EXECUTE_PATCH)
+    def test_u_flow_02c_invalid_blank_count_execute_zero_e002(
+        self, execute_mock: Any, boundary: Any
+    ) -> None:
+        for grid in (GRID_NO_BLANKS, GRID_THREE_BLANKS):
+            result = boundary.solve(grid)
+            _assert_failure(result, INVALID_EMPTY_COUNT_CODE)
+            execute_mock.assert_not_called()
 
-    def test_u_flow_02d_out_of_range_execute_zero_e004(self) -> None:
-        # U-FLOW-02d
-        # Given: grid contains -1 or 17; execute spied
-        # boundary = UIBoundary()
-        # When: boundary.solve(grid_out_of_range)
-        pytest.fail("RED: U-FLOW-02d — range violation → E004 envelope, execute 0×")
+    @patch(EXECUTE_PATCH)
+    def test_u_flow_02d_out_of_range_execute_zero_e004(
+        self, execute_mock: Any, boundary: Any
+    ) -> None:
+        result = boundary.solve(GRID_MINUS_ONE)
+        _assert_failure(result, OUT_OF_RANGE_CODE)
+        execute_mock.assert_not_called()
 
-    def test_u_flow_02e_duplicate_execute_zero_e005(self) -> None:
-        # U-FLOW-02e
-        # Given: duplicate non-zero; execute spied
-        # boundary = UIBoundary()
-        # When: boundary.solve(grid_duplicate)
-        pytest.fail("RED: U-FLOW-02e — duplicate → E005 envelope, execute 0×")
+    @patch(EXECUTE_PATCH)
+    def test_u_flow_02e_duplicate_execute_zero_e005(
+        self, execute_mock: Any, boundary: Any
+    ) -> None:
+        result = boundary.solve(GRID_DUPLICATE)
+        _assert_failure(result, DUPLICATE_VALUE_CODE)
+        execute_mock.assert_not_called()
+
+    @patch(EXECUTE_PATCH)
+    def test_u_flow_02b_jagged_cols_execute_zero(
+        self, execute_mock: Any, boundary: Any
+    ) -> None:
+        result = boundary.solve(GRID_EMPTY_COLS)
+        _assert_failure(result, INVALID_COL_COUNT_CODE)
+        execute_mock.assert_not_called()

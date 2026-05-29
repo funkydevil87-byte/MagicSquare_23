@@ -1,34 +1,33 @@
-"""U-OUT-01~03 — success output contract. Track A Boundary RED skeleton."""
+"""U-OUT-01~03 — success output contract via Boundary E2E."""
 
 from __future__ import annotations
 
-import pytest
-
-# U-OUT only: Control test double allowed (Domain logic mock forbidden)
-# from magicsquare.boundary.ui_boundary import UIBoundary
-# @patch("magicsquare.control.solve_partial_magic_square.SolvePartialMagicSquare.execute")
+from magicsquare.boundary.magic_square_boundary import MagicSquareBoundary
+from tests.conftest import GRID_G1
 
 
 class TestUOutOutputContract:
-    """FR-05-B — success int[6] shape with G1 and execute stub."""
+    """FR-05-B — success int[6] shape with G1."""
 
     def test_u_out_01_g1_success_vector_length_six(self) -> None:
-        # U-OUT-01
-        # Given: G1 valid partial grid; execute stub returns fixed int[6]
-        # boundary = UIBoundary()
-        # When: boundary.solve(GRID_G1) with patched execute
-        pytest.fail("RED: U-OUT-01 — G1 + execute stub returns success data length 6")
+        boundary = MagicSquareBoundary()
+        result = boundary.solve(GRID_G1)
+        assert isinstance(result, list)
+        assert len(result) == 6
 
     def test_u_out_02_g1_coordinates_one_indexed(self) -> None:
-        # U-OUT-02
-        # Given: G1 + execute stub returning [2,2,7,3,3,10]
-        # boundary = UIBoundary()
-        # When: boundary.solve(GRID_G1)
-        pytest.fail("RED: U-OUT-02 — r1,c1,r2,c2 in [1,4] (1-index, BR-14)")
+        boundary = MagicSquareBoundary()
+        result = boundary.solve(GRID_G1)
+        assert isinstance(result, list)
+        r1, c1, _n1, r2, c2, _n2 = result
+        for value in (r1, c1, r2, c2):
+            assert 1 <= value <= 4
 
     def test_u_out_03_g1_missing_values_in_range(self) -> None:
-        # U-OUT-03
-        # Given: G1 + execute stub; n1,n2 are the two missing numbers
-        # boundary = UIBoundary()
-        # When: boundary.solve(GRID_G1)
-        pytest.fail("RED: U-OUT-03 — n1,n2 ∈ [1,16] and n1≠n2 on success path")
+        boundary = MagicSquareBoundary()
+        result = boundary.solve(GRID_G1)
+        assert isinstance(result, list)
+        _r1, _c1, n1, _r2, _c2, n2 = result
+        assert 1 <= n1 <= 16
+        assert 1 <= n2 <= 16
+        assert n1 != n2

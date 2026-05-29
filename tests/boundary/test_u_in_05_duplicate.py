@@ -1,20 +1,32 @@
-"""U-IN-05 — non-zero duplicate (E005). Track A Boundary RED skeleton."""
+"""U-IN-05 — non-zero duplicate (E005)."""
 
 from __future__ import annotations
 
-import pytest
+from unittest.mock import patch
+
+from magicsquare.boundary.input_validator import InputValidator
+from tests.boundary.conftest import (
+    DUPLICATE_VALUE_CODE,
+    DUPLICATE_VALUE_MESSAGE,
+    EXECUTE_PATCH,
+    GRID_DUPLICATE,
+    FailureResult,
+)
 
 
 class TestUIn05Duplicate:
-    """FR-01 / AC-FR01-08 — DUPLICATE_VALUE → E005 failure envelope."""
+    """FR-01 / AC-FR01-08 — DUPLICATE_VALUE failure envelope."""
 
     def test_u_in_05_duplicate_nonzero_returns_e005(self) -> None:
-        # U-IN-05
-        # from magicsquare.boundary.input_validator import InputValidator
-        # Given: 4×4 grid, two blanks, duplicate non-zero value (0 excluded)
-        # validator = InputValidator()
-        # grid = ...  # e.g. TD-05 style duplicate
-        # When: validator.validate(grid)
-        pytest.fail(
-            "RED: U-IN-05 — duplicate non-zero yields E005 envelope, Domain execute 0×"
-        )
+        validator = InputValidator()
+        result = validator.validate(GRID_DUPLICATE)
+        assert isinstance(result, FailureResult)
+        assert result.code == DUPLICATE_VALUE_CODE
+        assert result.message == DUPLICATE_VALUE_MESSAGE
+
+    @patch(EXECUTE_PATCH)
+    def test_u_in_05_boundary_solve_does_not_execute(
+        self, execute_mock, boundary
+    ) -> None:
+        boundary.solve(GRID_DUPLICATE)
+        execute_mock.assert_not_called()
