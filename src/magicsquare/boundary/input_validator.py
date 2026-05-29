@@ -20,6 +20,11 @@ from magicsquare.boundary.schemas import (
     OUT_OF_RANGE_MESSAGE,
     FailureResult,
 )
+from magicsquare.entity.constants import CELL_MAX
+
+
+def _is_int_cell(value: object) -> bool:
+    return type(value) is int
 
 
 class InputValidator:
@@ -53,7 +58,7 @@ class InputValidator:
 
         for row in grid:
             for value in row:
-                if not isinstance(value, int):
+                if not _is_int_cell(value):
                     return FailureResult(
                         code=OUT_OF_RANGE_CODE,
                         message=OUT_OF_RANGE_MESSAGE,
@@ -61,7 +66,7 @@ class InputValidator:
                 if value == 0:
                     blank_count += 1
                     continue
-                if value < 0 or value > 16:
+                if value < 0 or value > CELL_MAX:
                     return FailureResult(
                         code=OUT_OF_RANGE_CODE,
                         message=OUT_OF_RANGE_MESSAGE,

@@ -10,7 +10,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Literal
 
-from magicsquare.boundary.exceptions import UNSOLVABLE_CODE, UnsolvableError
+import pytest
+
+from magicsquare.boundary.exceptions import UNSOLVABLE_CODE, BoundaryValidationError, UnsolvableError
 from magicsquare.boundary.magic_square_boundary import MagicSquareBoundary
 from magicsquare.boundary.schemas import (
     DUPLICATE_VALUE_CODE,
@@ -147,12 +149,10 @@ def validate_error_contract(
             return
         raise AssertionError("Expected UnsolvableError for no_valid_solution scenario.")
 
-    result = boundary.solve(scenario.grid)
-    assert isinstance(result, FailureResult), (
-        f"Expected FailureResult, got {type(result)!r}"
-    )
-    assert result.code == expected_code
-    assert result.message == expected_message
+    with pytest.raises(BoundaryValidationError) as exc_info:
+        boundary.solve(scenario.grid)
+    assert exc_info.value.code == expected_code
+    assert exc_info.value.message == expected_message
 
 
 def assert_scenario_contract(
@@ -245,18 +245,17 @@ def capture_scenario(
     input_text = format_grid(scenario.grid)
     try:
         result = boundary.solve(scenario.grid)
-    except UnsolvableError as exc:
+    except BoundaryValidationError as exc:
         return GoldenCapture(
             kind="error",
             input_text=input_text,
             body=exc.code,
         )
-
-    if isinstance(result, FailureResult):
+    except UnsolvableError as exc:
         return GoldenCapture(
             kind="error",
             input_text=input_text,
-            body=result.code,
+            body=exc.code,
         )
 
     return GoldenCapture(

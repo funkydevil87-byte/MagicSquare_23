@@ -303,6 +303,9 @@ MagicSquare_23/
 | FR-01 전체 + test_u_* GREEN | ✅ 완료 | Report/15 |
 | Boundary E2E + D-T22 | ✅ 완료 | `test_boundary_e2e.py`, `test_d_sol_22` |
 | Magic Square 본 기능 (FR-02~05) | ✅ 완료 | Entity/Control/Boundary E2E |
+| Golden Master (GM-01~10) | ✅ 완료 | Report/16 · **91 passed** |
+| ECB REFACTOR 계획 | ✅ 완료 (계획만) | Report/17 · README §REFACTOR TODO |
+| ECB REFACTOR High 3그룹 | ✅ 완료 | Report/18 · RF-01~06 · **102 passed** |
 
 ### Track A GREEN 진행 (AC-FR-01-01)
 
@@ -313,11 +316,78 @@ MagicSquare_23/
 | GREEN-04 `GRID_3X4` | `TestBoundaryValues::test_3x4_grid_returns_failure_result` | ✅ |
 | GREEN-W4 통합 | `test_ac_fr_01_01_contract_violation.py` 전체 | ✅ **29 passed** |
 
-### 다음 단계
+### 다음 단계 (REFACTOR High 3그룹 완료 후)
 
-1. GUI 수동 검증 — `python -m magicsquare.boundary.screen.app`
-2. PRD 한글 Message vs Report/09 English Message 정합 (선택)
-3. `main` 브랜치 릴리스 전략 (develop → main)
+1. README §REFACTOR **Medium/Low** (RF-07~RF-17) — Screen 위임·네이밍·dead code
+2. GUI 수동 검증 — `python -m magicsquare.boundary.screen.app`
+3. PRD throw vs `FailureResult` SSOT 확정 (RF-DQ-01) — Boundary 내부 `InputValidator` 잔류
+
+---
+
+## REFACTOR 단계 To-Do 리스트
+
+> **전제**: GREEN **102 passed** · Golden Master GM-01~10 완료 · REFACTOR = **동작 불변** 구조 개선  
+> **근거**: `Report/17.MagicSquare_ECB_REFACTOR_Planning_Report.md` · `.cursor/rules/magicsquare-tdd-testing.mdc` §REFACTOR  
+> **파일 매핑**: `domain.py` → `control/solve_partial_magic_square.py` · `ui_boundary` → `boundary/magic_square_boundary.py` · `main_window` → `boundary/screen/app.py`  
+> **실행 순서**: **그룹 1 → 그룹 2 → 그룹 3** (각 그룹 내 RF-ID 오름차순)
+
+### High — 그룹 1: 선행 · REFACTOR 게이트 (Test) ✅
+
+> 구조 변경 **전** 반드시 선행. 테스트 없이 REFACTOR 금지.
+
+- [x] **RF-01-01**: `tests/boundary/screen/test_app.py` — `_read_grid()` (빈칸→0, 형식·범위 `ValueError`)
+- [x] **RF-01-02**: `_display_result()` — `FailureResult` / `list[6]` / unknown 문자열·tone
+- [x] **RF-01-03**: `on_solve()` — `MagicSquareBoundary` mock 분기
+- [x] **RF-01-04**: `load_grid()` — 0→빈칸 표시
+- [x] **RF-01-05**: `pytest tests/boundary/screen/ -q` → GREEN (**13 passed**)
+
+### High — 그룹 2: 계약 · E001~E007 · 검증 SSOT (Contract) ✅
+
+> 외부 API·Error Code·입력 검증 드리프트 방지. 계약 깨짐 리스크 최대.
+
+- [x] **RF-02-01**: E001~E005 — `FailureResult` 반환 → PRD §13 **예외 throw** (`BoundaryValidationError`)
+- [x] **RF-02-02**: E006 `UNSOLVABLE` — `UnsolvableError` 매핑 유지
+- [x] **RF-02-03**: `test_u_*` · AC-FR-01-01 · Golden Master 회귀 GREEN
+- [x] **RF-06-01**: `input_validator` — `bool` 셀 거부 (`type(value) is int`)
+- [x] **RF-06-02**: `16` → Entity `CELL_MAX` SSOT
+- [x] **RF-06-03**: bool·범위 경계 테스트 GREEN
+
+### High — 그룹 3: 구조 · ECB 레이어 분리 (Architecture) ✅
+
+> Control/Boundary/Screen에 섞인 Entity·직렬화 책임 분리. Attempt·`int[6]` 회귀 주의.
+
+- [x] **RF-03-01**: `UnsolvableDomainError` catch → `control/magic_square_solver.py`로 이동 (`SolveUnsolvableError`)
+- [x] **RF-03-02**: `magic_square_boundary.py` — Entity import 제거 (`boundary→control`만)
+- [x] **RF-04-01**: `_attempt` → `entity/services/two_cell_solver.py` 추출 (complete+validate 시도)
+- [x] **RF-04-02**: `solve_partial_magic_square.execute` — Attempt 1/2 **순서만**
+- [x] **RF-04-03**: `tests/entity/test_two_cell_solver.py` · D-SOL-01~04 GREEN (D-T22는 Control `test_d_sol_22`)
+- [x] **RF-05-01**: `int[6]` → `boundary/result_formatter.py` SSOT
+- [x] **RF-05-02**: Screen `_display_result` / `on_solve` — Formatter 위임
+- [x] **RF-05-03**: `tests/boundary/test_result_formatter.py` GREEN (**5 passed**)
+
+### Medium / Low — High 3그룹 완료 후 (RF-07~RF-17)
+
+> 상세·전체 17건 목록: [`Report/17`](Report/17.MagicSquare_ECB_REFACTOR_Planning_Report.md) §8
+
+| RF-ID | 요약 |
+|-------|------|
+| RF-07~08 | Screen `_read_grid` / `_display_result` Boundary 위임 |
+| RF-09~10 | `tests/control/` 미러링 · Attempt DRY |
+| RF-11~12 | SAMPLE fixture 이동 · `ui_boundary`/`main_window` rename |
+| RF-13~17 | pass-through·GRID_SIZE SSOT·`_build_layout`·dead code 정리 |
+
+### REFACTOR 회귀 게이트 (매 단계 후)
+
+```powershell
+python -m pytest
+python -m pytest -m golden_master -v
+python -m pytest tests/boundary/test_ac_fr_01_01_contract_violation.py -q
+python -m pytest tests/boundary/test_boundary_e2e.py -q
+python -m pytest --cov=src/magicsquare --cov-report=term-missing
+```
+
+- Golden Master baseline diff **0** (무변경 PASS)
+- TD-01/G1/G2 `int[6]` · E001~E005 code/message · Attempt 1→2 · UC-D6 **불변**
 
 ---
 
@@ -351,6 +421,10 @@ MagicSquare_23/
 | [Report/15 — FR-01·E2E Full GREEN](Report/15.MagicSquare_FR01_E2E_Full_GREEN_Report.md) | FR-01·test_u_*·E2E·D-T22·회귀 세션 |
 | [Report/16 — Golden Master](Report/16.MagicSquare_Golden_Master_Regression_Report.md) | GM-01~GM-10 회귀 안전장치 구축 |
 | [Prompting/13 — Golden Master Transcript](Prompting/13.MagicSquare_Golden_Master_Regression_Transcript.md) | Golden Master 세션 Transcript |
+| [Report/17 — ECB REFACTOR 계획](Report/17.MagicSquare_ECB_REFACTOR_Planning_Report.md) | 코드 리뷰·ECB/SRP·REFACTOR 17건 우선순위 |
+| [Prompting/14 — REFACTOR 계획 Transcript](Prompting/14.MagicSquare_ECB_REFACTOR_Planning_Transcript.md) | REFACTOR 계획 세션 Transcript |
+| [Report/18 — REFACTOR High 3그룹](Report/18.MagicSquare_REFACTOR_High3Groups_Report.md) | RF-01~06 구현·회귀 GREEN 세션 |
+| [Prompting/15 — REFACTOR High 3그룹 Transcript](Prompting/15.MagicSquare_REFACTOR_High3Groups_Transcript.md) | REFACTOR High 3그룹 세션 Transcript |
 
 ### Open Questions (미해결)
 
@@ -392,6 +466,11 @@ python -m magicsquare.boundary.screen.app
 | 2026-05-29 | GREEN-01 (`grid=[]`) · GREEN-02 (`grid=None`) 완료 · AC-FR-01-01 **17/29** passed |
 | 2026-05-29 | GREEN-W3/W4 완료 · AC-FR-01-01 **29/29** passed · Control `MagicSquareSolver` 스텁 |
 | 2026-05-29 | Golden Master GM-01~GM-10 · Report/16 · Prompting/13 · 78 tests passed |
+| 2026-05-29 | ECB REFACTOR 계획 · README §REFACTOR TODO RF-01~17 · Report/17 · Prompting/14 |
+| 2026-05-29 | README §REFACTOR — High 3그룹( Test → Contract → Architecture ) 요약 정리 |
+| 2026-05-29 | REFACTOR 그룹 1 — Screen characterization RF-01 (**13 passed**) · Report/18 |
+| 2026-05-29 | REFACTOR 그룹 2 — Boundary throw RF-02/RF-06 · **92 passed** |
+| 2026-05-29 | REFACTOR 그룹 3 — ECB 분리 RF-03~05 · **102 passed** · Report/18 · Prompting/15 |
 
 ---
 

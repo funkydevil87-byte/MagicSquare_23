@@ -7,6 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
+from magicsquare.boundary.exceptions import BoundaryValidationError
 from tests.boundary.conftest import (
     DUPLICATE_VALUE_CODE,
     EXECUTE_PATCH,
@@ -21,14 +22,13 @@ from tests.boundary.conftest import (
     INVALID_ROW_COUNT_CODE,
     NULL_INPUT_CODE,
     OUT_OF_RANGE_CODE,
-    FailureResult,
 )
 
 
-def _assert_failure(result: Any, code: str) -> FailureResult:
-    assert isinstance(result, FailureResult)
-    assert result.code == code
-    return result
+def _assert_validation_failure(boundary: Any, grid: Any, code: str) -> None:
+    with pytest.raises(BoundaryValidationError) as exc_info:
+        boundary.solve(grid)
+    assert exc_info.value.code == code
 
 
 class TestUFlow02DomainIsolation:
@@ -38,16 +38,14 @@ class TestUFlow02DomainIsolation:
     def test_u_flow_02a_null_matrix_execute_zero_e003(
         self, execute_mock: Any, boundary: Any
     ) -> None:
-        result = boundary.solve(None)
-        _assert_failure(result, NULL_INPUT_CODE)
+        _assert_validation_failure(boundary, None, NULL_INPUT_CODE)
         execute_mock.assert_not_called()
 
     @patch(EXECUTE_PATCH)
     def test_u_flow_02b_invalid_size_execute_zero_e001(
         self, execute_mock: Any, boundary: Any
     ) -> None:
-        result = boundary.solve(GRID_3X4)
-        _assert_failure(result, INVALID_ROW_COUNT_CODE)
+        _assert_validation_failure(boundary, GRID_3X4, INVALID_ROW_COUNT_CODE)
         execute_mock.assert_not_called()
 
     @patch(EXECUTE_PATCH)
@@ -55,30 +53,26 @@ class TestUFlow02DomainIsolation:
         self, execute_mock: Any, boundary: Any
     ) -> None:
         for grid in (GRID_NO_BLANKS, GRID_THREE_BLANKS):
-            result = boundary.solve(grid)
-            _assert_failure(result, INVALID_EMPTY_COUNT_CODE)
+            _assert_validation_failure(boundary, grid, INVALID_EMPTY_COUNT_CODE)
             execute_mock.assert_not_called()
 
     @patch(EXECUTE_PATCH)
     def test_u_flow_02d_out_of_range_execute_zero_e004(
         self, execute_mock: Any, boundary: Any
     ) -> None:
-        result = boundary.solve(GRID_MINUS_ONE)
-        _assert_failure(result, OUT_OF_RANGE_CODE)
+        _assert_validation_failure(boundary, GRID_MINUS_ONE, OUT_OF_RANGE_CODE)
         execute_mock.assert_not_called()
 
     @patch(EXECUTE_PATCH)
     def test_u_flow_02e_duplicate_execute_zero_e005(
         self, execute_mock: Any, boundary: Any
     ) -> None:
-        result = boundary.solve(GRID_DUPLICATE)
-        _assert_failure(result, DUPLICATE_VALUE_CODE)
+        _assert_validation_failure(boundary, GRID_DUPLICATE, DUPLICATE_VALUE_CODE)
         execute_mock.assert_not_called()
 
     @patch(EXECUTE_PATCH)
     def test_u_flow_02b_jagged_cols_execute_zero(
         self, execute_mock: Any, boundary: Any
     ) -> None:
-        result = boundary.solve(GRID_EMPTY_COLS)
-        _assert_failure(result, INVALID_COL_COUNT_CODE)
+        _assert_validation_failure(boundary, GRID_EMPTY_COLS, INVALID_COL_COUNT_CODE)
         execute_mock.assert_not_called()
