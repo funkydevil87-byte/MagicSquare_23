@@ -104,28 +104,30 @@ Track A 상세 테스트 계획: [`docs/test_plan.md`](docs/test_plan.md)
 
 ### Track A — Boundary (FR-01, `docs/test_plan.md` 기준)
 
-- [ ] **A-RED-01**: `grid=None` → `NULL_INPUT`, Domain 0회 호출
-- [ ] **A-RED-06**: 모든 계약 위반 입력 → Domain 0회 호출 (AC-FR01-01)
-- [ ] **A-RED-02**: 행 개수 ≠ 4 → `INVALID_ROW_COUNT`
-- [ ] **A-RED-03**: jagged / 열 개수 ≠ 4 → `INVALID_COL_COUNT`
-- [ ] **A-RED-04**: 빈칸(0) 개수 ≠ 2 → `INVALID_EMPTY_COUNT`
-- [ ] **A-RED-05**: 범위/중복 위반 → `OUT_OF_RANGE` / `DUPLICATE_VALUE`
+- [x] **A-RED-01**: `grid=None` → `NULL_INPUT`, Domain 0회 호출
+- [x] **A-RED-06**: 모든 계약 위반 입력 → Domain 0회 호출 (AC-FR01-01)
+- [x] **A-RED-02**: 행 개수 ≠ 4 → `INVALID_ROW_COUNT`
+- [x] **A-RED-03**: jagged / 열 개수 ≠ 4 → `INVALID_COL_COUNT`
+- [x] **A-RED-04**: 빈칸(0) 개수 ≠ 2 → `INVALID_EMPTY_COUNT`
+- [x] **A-RED-05**: 범위/중복 위반 → `OUT_OF_RANGE` / `DUPLICATE_VALUE`
+- [x] **test_u_*** — U-FLOW/U-IN/U-OUT **11건 GREEN** (`tests/boundary/test_u_*.py`)
 
-### Track B — Domain/Logic (설계서 기준, 후속)
+### Track B — Domain/Logic
 
-- [ ] **D-T01~D-T06**: 마방진 판정, 빈칸·누락 숫자, Attempt 1/2
-- [ ] **D-T14**: 두 조합 모두 실패 → `UNSOLVABLE`
+- [x] **D-T01~D-T06**: 마방진 판정, 빈칸·누락 숫자, Attempt 1/2 (`test_d_*`)
+- [x] **D-T14**: 두 조합 모두 실패 → `UNSOLVABLE`
+- [x] **D-T22**: both-valid 시 Attempt 1 우선 (`test_d_sol_22_both_valid.py`)
 
 ### 환경·품질
 
-- [ ] `python -m pytest` 실행 환경 확인
-- [ ] AAA 패턴, Error Message **완전 일치**(`==`) 검증
-- [ ] Domain Logic 커버리지 95%+, Boundary 85%+, 전체 90%+ (목표)
+- [x] `python -m pytest` 실행 환경 확인 (**65 passed**)
+- [x] AAA 패턴, Error Message **완전 일치**(`==`) 검증
+- [x] core 커버리지 **≥85%** (`screen/app.py` 제외, `pytest-cov`)
 
 ### 결함 목록 연결
 
-- [x] [`defect_list.md`](defect_list.md) 생성 및 발견 결함 기록 (2026-05-29, RED 24 ERROR)
-- [ ] 모든 결함 수정 후 회귀 테스트 통과 확인
+- [x] [`defect_list.md`](defect_list.md) 생성 및 발견 결함 기록
+- [x] 모든 결함 수정 후 회귀 테스트 통과 확인 (v2.0)
 
 ### Track A — GREEN (AC-FR-01-01, `tests/boundary/test_ac_fr_01_01_contract_violation.py`)
 
@@ -221,22 +223,26 @@ MagicSquare_23/
 │   ├── 10.MagicSquare_DualTrack_RED_Skeleton_Test_Report.md
 │   ├── 11.MagicSquare_TrackA_GREEN_01_EmptyGrid_Report.md
 │   ├── 12.MagicSquare_TrackA_GREEN_Planning_Checklist_Report.md
-│   └── 13.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Report.md
+│   ├── 13.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Report.md
+│   ├── 14.MagicSquare_TrackB_GREEN_and_GUI_Report.md
+│   └── 15.MagicSquare_FR01_E2E_Full_GREEN_Report.md
 ├── Prompting/                         ← 워크숍 프롬프트·트랜스크립트
 │   ├── 05.MagicSquare_TrackA_RED_Test_Transcript.md
 │   ├── 06.MagicSquare_DualTrack_RED_Design_Transcript.md
 │   ├── 07.MagicSquare_DualTrack_RED_Skeleton_Test_Transcript.md
 │   ├── 08.MagicSquare_TrackA_GREEN_01_EmptyGrid_Transcript.md
 │   ├── 09.MagicSquare_TrackA_GREEN_Planning_Checklist_Transcript.md  (+ 01~04)
-│   └── 10.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Transcript.md
+│   ├── 10.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Transcript.md
+│   ├── 11.MagicSquare_TrackB_GREEN_and_GUI_Transcript.md
+│   └── 12.MagicSquare_FR01_E2E_Full_GREEN_Transcript.md
 ├── src/magicsquare/
-│   ├── boundary/                      ← Boundary 레이어 (AC-FR-01-01 GREEN 진행 중)
-│   ├── control/                       ← Control 레이어 (구현 예정)
-│   └── entity/                        ← Entity 레이어 (User TDD 완료)
+│   ├── boundary/                      ← Boundary + screen GUI
+│   ├── control/                       ← SolvePartialMagicSquare
+│   └── entity/                        ← Domain services
 ├── tests/
-│   ├── conftest.py                    ← G0~G3 fixture placeholder
-│   ├── boundary/                      ← Track A RED (Report/08 + test_u_*)
-│   └── entity/                        ← User GREEN + test_d_* RED skeleton
+│   ├── conftest.py                    ← G0~G3 fixtures
+│   ├── boundary/                      ← Track A GREEN + E2E
+│   └── entity/                        ← Track B GREEN
 └── .cursor/
     ├── rules/                         ← 프로젝트 Cursor Rules
     └── agents/                        ← 역할별 Cursor Agent 정의
@@ -257,8 +263,10 @@ MagicSquare_23/
 | README TDD 시작 선언 | ✅ 완료 | Report/07 |
 | Track A Test Skeleton + RED | ✅ 완료 | Report/08, Report/10 |
 | Track A GREEN (AC-FR-01-01) | ✅ 완료 (**29/29**) | Report/11, Report/12 |
-| Track B Domain RED → GREEN | ⏳ 예정 | Report/02 §1.5 |
-| Magic Square 본 기능 구현 | ⏳ 예정 | PRD FR-01~05 |
+| Track B Domain RED → GREEN | ✅ 완료 | Report/14 |
+| FR-01 전체 + test_u_* GREEN | ✅ 완료 | Report/15 |
+| Boundary E2E + D-T22 | ✅ 완료 | `test_boundary_e2e.py`, `test_d_sol_22` |
+| Magic Square 본 기능 (FR-02~05) | ✅ 완료 | Entity/Control/Boundary E2E |
 
 ### Track A GREEN 진행 (AC-FR-01-01)
 
@@ -271,9 +279,9 @@ MagicSquare_23/
 
 ### 다음 단계
 
-1. **REFACTOR** — `input_validator` `tests` import 제거, `schemas.FailureResult` 통합
-2. **AC-FR-01-02~** — 다음 Boundary AC RED/GREEN 착수
-3. Track B Domain 테스트(D-T*) 착수
+1. GUI 수동 검증 — `python -m magicsquare.boundary.screen.app`
+2. PRD 한글 Message vs Report/09 English Message 정합 (선택)
+3. `main` 브랜치 릴리스 전략 (develop → main)
 
 ---
 
@@ -302,6 +310,9 @@ MagicSquare_23/
 | [Prompting/09 — GREEN 계획 Transcript](Prompting/09.MagicSquare_TrackA_GREEN_Planning_Checklist_Transcript.md) | GREEN 계획·체크리스트 세션 Transcript |
 | [Report/13 — Track A GREEN 완료](Report/13.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Report.md) | AC-FR-01-01 GREEN 29/29 완료 세션 |
 | [Prompting/10 — GREEN 완료 Transcript](Prompting/10.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Transcript.md) | AC-FR-01-01 GREEN 완료 세션 Transcript |
+| [Report/14 — Track B GREEN·GUI](Report/14.MagicSquare_TrackB_GREEN_and_GUI_Report.md) | Entity/Control GREEN + tkinter GUI |
+| [Report/15 — FR-01·E2E Full GREEN](Report/15.MagicSquare_FR01_E2E_Full_GREEN_Report.md) | FR-01·test_u_*·E2E·D-T22·회귀 세션 |
+| [Prompting/12 — Full GREEN Transcript](Prompting/12.MagicSquare_FR01_E2E_Full_GREEN_Transcript.md) | 본 세션 Transcript |
 
 ### Open Questions (미해결)
 
@@ -315,11 +326,17 @@ MagicSquare_23/
 ## 12. 빠른 시작
 
 ```powershell
+# 설치 (최초 1회)
+pip install -e ".[dev]"
+
 # 테스트 실행 (Python 3.10+)
 python -m pytest
 
-# 커버리지 (pytest-cov 설치 후)
+# 커버리지 (screen GUI 제외)
 python -m pytest --cov=src/magicsquare --cov-report=term-missing
+
+# GUI 수동 확인
+python -m magicsquare.boundary.screen.app
 ```
 
 ---
