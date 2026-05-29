@@ -220,13 +220,15 @@ MagicSquare_23/
 │   ├── 09.MagicSquare_DualTrack_RED_Design_Report.md
 │   ├── 10.MagicSquare_DualTrack_RED_Skeleton_Test_Report.md
 │   ├── 11.MagicSquare_TrackA_GREEN_01_EmptyGrid_Report.md
-│   └── 12.MagicSquare_TrackA_GREEN_Planning_Checklist_Report.md
+│   ├── 12.MagicSquare_TrackA_GREEN_Planning_Checklist_Report.md
+│   └── 13.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Report.md
 ├── Prompting/                         ← 워크숍 프롬프트·트랜스크립트
 │   ├── 05.MagicSquare_TrackA_RED_Test_Transcript.md
 │   ├── 06.MagicSquare_DualTrack_RED_Design_Transcript.md
 │   ├── 07.MagicSquare_DualTrack_RED_Skeleton_Test_Transcript.md
 │   ├── 08.MagicSquare_TrackA_GREEN_01_EmptyGrid_Transcript.md
-│   └── 09.MagicSquare_TrackA_GREEN_Planning_Checklist_Transcript.md  (+ 01~04)
+│   ├── 09.MagicSquare_TrackA_GREEN_Planning_Checklist_Transcript.md  (+ 01~04)
+│   └── 10.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Transcript.md
 ├── src/magicsquare/
 │   ├── boundary/                      ← Boundary 레이어 (AC-FR-01-01 GREEN 진행 중)
 │   ├── control/                       ← Control 레이어 (구현 예정)
@@ -298,6 +300,8 @@ MagicSquare_23/
 | [Prompting/08 — GREEN-01 Transcript](Prompting/08.MagicSquare_TrackA_GREEN_01_EmptyGrid_Transcript.md) | GREEN-01 세션 Transcript |
 | [Report/12 — Track A GREEN 계획](Report/12.MagicSquare_TrackA_GREEN_Planning_Checklist_Report.md) | GREEN W0~W4 순서·README TODO 체크리스트 |
 | [Prompting/09 — GREEN 계획 Transcript](Prompting/09.MagicSquare_TrackA_GREEN_Planning_Checklist_Transcript.md) | GREEN 계획·체크리스트 세션 Transcript |
+| [Report/13 — Track A GREEN 완료](Report/13.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Report.md) | AC-FR-01-01 GREEN 29/29 완료 세션 |
+| [Prompting/10 — GREEN 완료 Transcript](Prompting/10.MagicSquare_TrackA_GREEN_AC_FR_01_01_Complete_Transcript.md) | AC-FR-01-01 GREEN 완료 세션 Transcript |
 
 ### Open Questions (미해결)
 
@@ -329,6 +333,7 @@ python -m pytest --cov=src/magicsquare --cov-report=term-missing
 | 2026-05-29 | Track A GREEN 계획·README §7 GREEN TODO · Report/12 · Prompting/09 |
 | 2026-05-29 | GREEN-01 (`grid=[]`) · GREEN-02 (`grid=None`) 완료 · AC-FR-01-01 **17/29** passed |
 | 2026-05-29 | GREEN-W3/W4 완료 · AC-FR-01-01 **29/29** passed · Control `MagicSquareSolver` 스텁 |
+| 2026-05-29 | Report/13 · Prompting/10 — AC-FR-01-01 GREEN 완료 세션 Export |
 
 ---
 
