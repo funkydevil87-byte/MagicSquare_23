@@ -1,127 +1,237 @@
 # MagicSquare_23
 
-4×4 마방진(Magic Square)을 다루는 학습·연습 프로젝트입니다.  
-현재 단계는 **문제 정의(Problem Definition)**이며, 구현은 아직 시작하지 않았습니다.
+4×4 마방진(Magic Square) **부분 격자 해결**을 다루는 TDD·Clean Architecture 학습 프로젝트입니다.
+
+빈칸 2개가 있는 `4×4` 격자에 누락된 두 숫자를 채워 **마방 상수 34**를 만족하는 해를, **고정된 입·출력 계약**과 **Dual-Track TDD**로 구현합니다. 알고리즘 난이도보다 **레이어 분리 · 계약 기반 테스트 · 리팩토링** 훈련이 목표입니다.
+
+> **TDD 시작 선언**: 구현 전에 Scenario → Acceptance Criteria → RED Test ID → Test Skeleton → RED Failure → GREEN Task → REFACTOR Candidate 추적 구조를 고정합니다. **RED**는 Test Skeleton 실행 후 **기대한 이유로 실패하는 상태를 확인**하는 단계입니다.
 
 ---
 
-## 프로젝트 목적
+## 1. 고정 입·출력 계약 (변경 금지)
 
-16개의 서로 다른 정수(1~16)를 4×4 격자에 배치했을 때, **행·열·대각선의 합이 모두 동일한지**를 다룹니다.
+| 항목 | 고정 값 |
+|------|---------|
+| 입력 | `4×4 int[][]`, `0` = 빈칸, 빈칸 **정확히 2개**, 값 `0` 또는 `1~16`, 0 제외 중복 금지 |
+| 출력 (성공) | `int[6]` = `[r1,c1,n1,r2,c2,n2]`, 좌표 **1-index** |
+| Attempt 1 | 작은 누락 숫자 → 첫 빈칸, 큰 누락 숫자 → 둘째 빈칸 |
+| Attempt 2 | Attempt 1 실패 시 반대 조합 |
+| 둘 다 유효 | **Attempt 1 우선** (UC-D6) |
+| 마방 상수 | **34** (행 4 + 열 4 + 대각선 2 = **10개 선**) |
+| 첫 빈칸 | row-major(행 우선) 스캔 시 처음 발견되는 `0` |
+| 실패 신호 | 정의된 Error Code + Message를 포함하는 **예외(throw)** |
+| 입력 검증 실패 | Domain resolver **미호출** |
+| 해결 불가 | `UNSOLVABLE` + `주어진 배치로는 마방진을 완성할 수 없습니다` |
 
-이 저장소의 초점은 “마방진을 만드는 앱”이 아니라, 아래 **검증 책임**을 명확히 정의하는 것입니다.
-
-> 사용자가 제시한 4×4 배치가, 1~16을 각각 한 번씩 사용하고 모든 관련 선의 합이 같은지, **일관된 규칙으로 판정**한다.
+근거: [`Report/02.MagicSquare_DualTrack_TDD_CleanArchitecture_Design.md`](Report/02.MagicSquare_DualTrack_TDD_CleanArchitecture_Design.md), [`docs/PRD_MagicSquare.md`](docs/PRD_MagicSquare.md) v1.1
 
 ---
 
-## 핵심 가정
+## 2. 프로젝트 목적
 
-| 항목 | 내용 |
+| 관점 | 내용 |
 |------|------|
-| 격자 | 4×4 (16칸) |
-| 값 | 1부터 16까지, 각 숫자는 정확히 1회 |
-| 마방 상수 | 모든 관련 선의 합 = **34** |
-| 사용자 역할 | 칸을 직접 채움 |
-| 시스템 역할 | **검증(판정)만** 수행 — 완성·생성·힌트는 현재 범위 밖 |
-| 개발 접근 | 문제 정의 후 **TDD**로 검증 계약·불변식을 먼저 고정할 예정 |
+| **Problem** | “마방진을 만든다”가 아니라, **검증 가능한 불변식 조건**을 고정 계약으로 구현한다 |
+| **학습 목표** | 불변식 기반 사고, Boundary/Domain 분리, RED→GREEN→REFACTOR, Concept→Test 추적성 |
+| **대상 사용자** | TDD 학습자, ECB/Clean Architecture 학습자, 계약 기반 코드 리뷰어 |
+| **범위 밖** | UI 화면, DB/Web, N×N 일반화, 힌트·생성기 |
+
+초기 문제 정의(완성 격자 **판정** 중심)는 [`Report/01.MagicSquare_ProblemDefinition_Report.md`](Report/01.MagicSquare_ProblemDefinition_Report.md)에 기록되어 있으며, 현재 PRD는 **부분 격자 해결(2빈칸 채우기)** 로 범위가 확장되었습니다.
 
 ---
 
-## 문제 정의 요약
+## 3. TDD 개발 흐름
 
-### 표면 정의 (피해야 할 표현)
+```
+Scenario → Acceptance Criteria → RED Test ID → Test Skeleton
+    → RED Failure 확인 → GREEN Task (최소 구현) → REFACTOR Candidate
+```
 
-> “4×4 마방진을 만드는 프로그램”
-
-생성·UI·퍼즐 풀이와 **판정 책임**이 섞이기 쉽습니다.
-
-### 정확한 정의
-
-> 완성된 4×4 배치가 마방진 조건을 만족하는지, **누가 채웠든 같은 기준으로 정확히 판정**한다.
-
-### 핵심 Invariant
-
-**도메인**
-
-- 16칸 모두 값이 있음
-- 1~16이 각각 정확히 1회
-- 행 4 + 열 4 + 대각선 2 = **10개 선**의 합이 모두 같음 (= 34)
-
-**시스템**
-
-- 같은 배치 → 같은 판정 (결정성)
-- 조건을 모두 만족할 때만 성공
-- 하나라도 위반 시 성공 아님
-- 검사 순서와 무관하게 동일한 결과
-- 판정만 수행하고 배치 내용은 변경하지 않음
-
-### 훈련하려는 사고
-
-- 규칙을 **검사 가능한 조건**으로 쪼개기
-- **채우기 vs 판정** 책임 분리
-- 불변식·입출력 **계약**을 구현 전에 고정
-- 반복 연습에서도 **동일한 심사 기준** 유지 (TDD 정신)
+| 단계 | 정의 |
+|------|------|
+| **RED** | Test Skeleton 실행 → 기대한 이유로 FAIL/ERROR 확인 |
+| **GREEN** | RED 실패를 통과시키는 **최소 구현** |
+| **REFACTOR** | 동작 불변 하에 구조 개선 |
 
 ---
 
-## Why 요약 (STEP 2~4)
+## 4. Dual-Track TDD
 
-| 단계 | 질문 | 핵심 |
-|------|------|------|
-| Why #1 | 왜 완성해야 하나 | 과제·자기 확인·최종 판정·학습 증명 |
-| Why #2 | 왜 프로그램인가 | 반복 가능한 판정, 다중 제약 자동화, 오판 방지, 규칙 명시화 |
-| Why #3 | 왜 TDD인가 | 판정 통제, 불변식, 명확한 입·출력 계약 |
+| Track | RED Test ID | 검증 대상 | Domain 호출 |
+|-------|-------------|-----------|-------------|
+| **Track A — Boundary** | `U-T*` / `A-RED-*` | 입력 스키마, Error Code/Message, 출력 형식 | 입력 검증 실패 시 **미호출** |
+| **Track B — Domain/Logic** | `D-T*` | 빈칸·누락 숫자, 합 34, Attempt 1/2, UNSOLVABLE | Entity/Control 단위 RED |
+
+Track A 상세 테스트 계획: [`docs/test_plan.md`](docs/test_plan.md)
 
 ---
 
-## 저장소 구조
+## 5. ECB 레이어 분리
+
+| 레이어 | 패키지 | 책임 |
+|--------|--------|------|
+| **Entity** | `src/magicsquare/entity/` | 도메인 VO·Service, 불변식, 마방진 판정·해결 |
+| **Control** | `src/magicsquare/control/` | 유스케이스 오케스트레이션 (Attempt 1/2, UC-D6) |
+| **Boundary** | `src/magicsquare/boundary/` | 입력 검증, Error Contract, 공개 API, Domain 호출 단락 |
+
+의존 방향: `Boundary → Control → Entity` (역방향 금지)
+
+---
+
+## 6. Scenario 추적 보드 (요약)
+
+15개 Scenario가 PRD·설계서·README 추적 구조에 확정되어 있습니다. 전체 AC·Test Skeleton·GREEN/REFACTOR 후보는 [`Report/07.MagicSquare_README_TDD_Start_Report.md`](Report/07.MagicSquare_README_TDD_Start_Report.md) §2.4를 참고하세요.
+
+| Scenario ID | 요약 | RED Test ID | ECB Layer |
+|-------------|------|-------------|-----------|
+| SC-B01 | None 입력 | U-T09 | Boundary |
+| SC-B02 | 4×4가 아닌 입력 | U-T02, U-T03 | Boundary |
+| SC-B03 | 빈칸 개수 오류 | U-T04, U-T05 | Boundary |
+| SC-B04 | 값 범위 오류 | U-T06, U-T07 | Boundary |
+| SC-B05 | 중복 숫자 오류 | U-T08 | Boundary |
+| SC-B06 | 결과 배열 길이 6 | U-T01 (부분) | Boundary |
+| SC-B07 | 반환 좌표 1-index | U-T11 (부분) | Boundary + Entity |
+| SC-D01 | 빈칸 좌표 row-major 탐색 | D-T05 | Entity |
+| SC-D02 | 누락 숫자 오름차순 탐색 | D-T06 | Entity |
+| SC-D03~D05 | 행·열·대각선 합 34 검증 | D-T01 (부분) | Entity |
+| SC-D06 | small-first 성공 | D-T02 | Control |
+| SC-D07 | small-first 실패 후 reverse 성공 | D-T03 | Control |
+| SC-D08 | 두 조합 모두 실패 | D-T14, U-T10 | Control + Boundary |
+
+---
+
+## 7. RED 시작 체크리스트
+
+### Track A — Boundary (FR-01, `docs/test_plan.md` 기준)
+
+- [ ] **A-RED-01**: `grid=None` → `NULL_INPUT`, Domain 0회 호출
+- [ ] **A-RED-06**: 모든 계약 위반 입력 → Domain 0회 호출 (AC-FR01-01)
+- [ ] **A-RED-02**: 행 개수 ≠ 4 → `INVALID_ROW_COUNT`
+- [ ] **A-RED-03**: jagged / 열 개수 ≠ 4 → `INVALID_COL_COUNT`
+- [ ] **A-RED-04**: 빈칸(0) 개수 ≠ 2 → `INVALID_EMPTY_COUNT`
+- [ ] **A-RED-05**: 범위/중복 위반 → `OUT_OF_RANGE` / `DUPLICATE_VALUE`
+
+### Track B — Domain/Logic (설계서 기준, 후속)
+
+- [ ] **D-T01~D-T06**: 마방진 판정, 빈칸·누락 숫자, Attempt 1/2
+- [ ] **D-T14**: 두 조합 모두 실패 → `UNSOLVABLE`
+
+### 환경·품질
+
+- [ ] `python -m pytest` 실행 환경 확인
+- [ ] AAA 패턴, Error Message **완전 일치**(`==`) 검증
+- [ ] Domain Logic 커버리지 95%+, Boundary 85%+, 전체 90%+ (목표)
+
+### 결함 목록 연결
+
+- [x] [`defect_list.md`](defect_list.md) 생성 및 발견 결함 기록 (2026-05-29, RED 24 ERROR)
+- [ ] 모든 결함 수정 후 회귀 테스트 통과 확인
+
+---
+
+## 8. Quality Gates
+
+| 항목 | 기준 |
+|------|------|
+| 테스트 프레임워크 | pytest + AAA |
+| 실행 | `python -m pytest` |
+| 실패 신호 | 예외 throw만 허용 (sentinel/`int[6]` 실패 반환 금지) |
+| 금지 | `print(...)`, bare except, 매직 넘버, 레이어 경계 위반 |
+| 규칙 | `.cursorrules`, `.cursor/rules/*.mdc` |
+
+---
+
+## 9. 저장소 구조
 
 ```
 MagicSquare_23/
-├── README.md                 ← 이 파일 (프로젝트 개요)
+├── README.md                          ← 이 파일 (TDD 시작 선언 · 프로젝트 개요)
+├── pyproject.toml                     ← pytest 설정 (pythonpath=src)
+├── docs/
+│   ├── PRD_MagicSquare.md             ← PRD v1.1
+│   └── test_plan.md                   ← Track A Boundary 테스트 계획
+├── defect_list.md                     ← RED 결함·회귀 추적 (QA)
 ├── Report/
-│   └── 01.MagicSquare_ProblemDefinition_Report.md   ← STEP 1~5 통합 보고서
-└── Prompting/
-    └── 01.MagicSquare_ProblemDefinition_Report-Prompt.md   ← 문제 정의 세션용 프롬프트
+│   ├── 01.MagicSquare_ProblemDefinition_Report.md
+│   ├── 02.MagicSquare_DualTrack_TDD_CleanArchitecture_Design.md
+│   ├── 03.CursorRules_and_UserEntity_Implementation_Report.md
+│   ├── 04.CursorAgents_Setup_Report.md
+│   ├── 05.MagicSquare_PRD_Review_Report.md
+│   ├── 07.MagicSquare_README_TDD_Start_Report.md
+│   └── 08.MagicSquare_TrackA_RED_Test_and_Defect_Report.md
+├── Prompting/                         ← 워크숍 프롬프트·트랜스크립트
+│   └── 05.MagicSquare_TrackA_RED_Test_Transcript.md  (+ 01~04)
+├── src/magicsquare/
+│   ├── boundary/                      ← Boundary 레이어 (구현 예정)
+│   ├── control/                       ← Control 레이어 (구현 예정)
+│   └── entity/                        ← Entity 레이어 (User TDD 완료)
+├── tests/
+│   └── entity/test_user.py            ← User 엔티티 테스트 (6 passed)
+└── .cursor/
+    ├── rules/                         ← 프로젝트 Cursor Rules
+    └── agents/                        ← 역할별 Cursor Agent 정의
 ```
 
-| 폴더 | 설명 |
+---
+
+## 10. 현재 진행 상태
+
+| 단계 | 상태 | 근거 |
+|------|------|------|
+| STEP 1~5 — 문제 정의 | ✅ 완료 | Report/01 |
+| Dual-Track · ECB 설계 | ✅ 완료 | Report/02 |
+| Cursor Rules · ECB 스켈레톤 | ✅ 완료 | Report/03 |
+| User(Entity) TDD 예제 | ✅ 완료 (6 tests passed) | Report/03 |
+| Cursor Agent 구성 | ✅ 완료 | Report/04 |
+| PRD v1.1 작성·검토 | ✅ 완료 | Report/05, `docs/PRD_MagicSquare.md` |
+| README TDD 시작 선언 | ✅ 완료 | Report/07 |
+| Track A Test Skeleton + RED | ⏳ **다음 단계** | `docs/test_plan.md` |
+| Track B Domain RED → GREEN | ⏳ 예정 | Report/02 §1.5 |
+| Magic Square 본 기능 구현 | ⏳ 예정 | PRD FR-01~05 |
+
+### 다음 단계
+
+1. **SC-B01 / A-RED-01**부터 Track A Test Skeleton 작성
+2. `python -m pytest` 실행 → Expected RED Failure 확인
+3. Scenario별 GREEN 최소 구현 (1건씩)
+4. Track B Domain 테스트(D-T*) 착수
+
+---
+
+## 11. 참고 문서
+
+| 문서 | 역할 |
 |------|------|
-| `Report/` | 관찰 · Why 분석 · 진짜 문제 정의(STEP 1~5) 전체 문서 |
-| `Prompting/` | 문제 정의 워크숍을 재현·확장할 때 사용한 프롬프트 기록 |
+| [Report/01 — 문제 정의](Report/01.MagicSquare_ProblemDefinition_Report.md) | Observation · Why 체인 · 진짜 문제 정의 |
+| [Report/02 — 설계](Report/02.MagicSquare_DualTrack_TDD_CleanArchitecture_Design.md) | Dual-Track TDD · ECB · Domain API · 테스트 ID |
+| [Report/03 — 개발 환경](Report/03.CursorRules_and_UserEntity_Implementation_Report.md) | Cursor Rules · ECB 스켈레톤 · User TDD |
+| [Report/04 — Cursor Agent](Report/04.CursorAgents_Setup_Report.md) | 역할별 Agent 정의 |
+| [Report/05 — PRD 검토](Report/05.MagicSquare_PRD_Review_Report.md) | PRD 품질 검토 · P0~P3 개선 권고 |
+| [Report/07 — README TDD 선언](Report/07.MagicSquare_README_TDD_Start_Report.md) | README 작성 세션 · 15 Scenario 추적 보드 |
+| [docs/PRD_MagicSquare.md](docs/PRD_MagicSquare.md) | 구현 전 요구사항 · FR · AC · Traceability |
+| [docs/test_plan.md](docs/test_plan.md) | Track A Boundary RED 테스트 계획 |
+| [defect_list.md](defect_list.md) | RED 실행 결함 목록 · 회귀 체크리스트 |
+| [Report/08 — Track A RED·결함](Report/08.MagicSquare_TrackA_RED_Test_and_Defect_Report.md) | RED 테스트·결함 세션 보고서 |
+| [Prompting/05 — Track A RED Transcript](Prompting/05.MagicSquare_TrackA_RED_Test_Transcript.md) | 본 세션 대화형 Transcript |
+
+### Open Questions (미해결)
+
+| ID | 내용 |
+|----|------|
+| DQ-01 | User Journey 1차 근거 문서 부재 |
+| DQ-02 | Data Layer 포함 여부 (Report/02 vs PRD Out-of-Scope) |
 
 ---
 
-## 현재 진행 상태
+## 12. 빠른 시작
 
-| 단계 | 상태 |
-|------|------|
-| STEP 1 — Observation (관찰) | ✅ 완료 |
-| STEP 2 — Why #1 (왜 완성?) | ✅ 완료 |
-| STEP 3 — Why #2 (왜 프로그램?) | ✅ 완료 |
-| STEP 4 — Why #3 (왜 TDD?) | ✅ 완료 |
-| STEP 5 — 진짜 문제 정의 | ✅ 완료 |
-| 검증 시나리오 · 설계 · 구현 | ⏳ 예정 |
+```powershell
+# 테스트 실행 (Python 3.10+)
+python -m pytest
 
----
-
-## 다음 단계 (예정)
-
-아직 결정·작성이 필요한 항목입니다.
-
-- 검증 시나리오 목록 (Given–When–Then)
-- 입출력 계약 (빈 칸·미완성 배치 처리, 실패 시 진단 범위)
-- 이해관계자·성공 척도
-- TDD 사이클에 따른 설계 및 구현
-
----
-
-## 상세 문서
-
-전체 논의·표·불변식·구조적 문제 분석은 아래 보고서를 참고하세요.
-
-**[Report/01.MagicSquare_ProblemDefinition_Report.md](Report/01.MagicSquare_ProblemDefinition_Report.md)**
+# 커버리지 (pytest-cov 설치 후)
+python -m pytest --cov=src/magicsquare --cov-report=term-missing
+```
 
 ---
 
@@ -129,9 +239,9 @@ MagicSquare_23/
 
 | 날짜 | 내용 |
 |------|------|
-| 2026-05-28 | STEP 1~5 문제 정의 보고서 작성 |
-| 2026-05-28 | README.md 초판 |
+| 2026-05-28 | STEP 1~5 문제 정의 보고서 · README 초판 |
+| 2026-05-29 | PRD v1.1 · Dual-Track 설계 · 개발 환경 · README TDD 시작 선언 반영 |
 
 ---
 
-*본 README는 문제 정의 단계의 요약입니다. 구현 세부는 이후 단계에서 추가됩니다.*
+*본 README는 TDD 시작 선언 및 프로젝트 개요입니다. 상세 AC·테스트 데이터·Traceability Matrix는 PRD와 Report 문서를 참고하세요.*
