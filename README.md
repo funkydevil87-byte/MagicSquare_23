@@ -127,6 +127,64 @@ Track A 상세 테스트 계획: [`docs/test_plan.md`](docs/test_plan.md)
 - [x] [`defect_list.md`](defect_list.md) 생성 및 발견 결함 기록 (2026-05-29, RED 24 ERROR)
 - [ ] 모든 결함 수정 후 회귀 테스트 통과 확인
 
+### Track A — GREEN (AC-FR-01-01, `tests/boundary/test_ac_fr_01_01_contract_violation.py`)
+
+> **대상 AC**: AC-FR-01-01 · PRD §8.1 `INVALID_SIZE` (`Grid must be 4x4.`)  
+> **RED 선행**: RED-01~05 (`TestScopeLimitation` → `TestNormalFailureReturn` → `TestBoundaryValues` → `TestIsolationVerification` → `TestMessageIdentity`)  
+> **완료 기준**: 아래 W0~W4 완료 후 **29 passed** (현재 RED-01 `#24~#28` ScopeLimitation 6건은 구현 없이 통과)
+
+#### GREEN 완료 게이트
+
+- [ ] `pytest tests/boundary/test_ac_fr_01_01_contract_violation.py -q` → **29 passed**
+
+#### GREEN-W0 — 스키마·조기 반환 (기반)
+
+- [ ] `src/magicsquare/boundary/schemas.py` — `FailureResult`, `INVALID_SIZE_CODE`, `INVALID_SIZE_MESSAGE` 고정
+- [ ] `src/magicsquare/boundary/input_validator.py` — `tests` import 제거, `schemas` 사용
+- [ ] `MagicSquareBoundary.solve()` — 검증 실패 시 `FailureResult` **조기 반환**, Domain/Control 미진입
+- [ ] 검증: `pytest tests/boundary/test_ac_fr_01_01_contract_violation.py::TestScopeLimitation -q` → 6 passed
+
+#### GREEN-W1 — `grid is None` → `INVALID_SIZE`
+
+- [ ] `InputValidator.validate()` — `grid is None` 분기 추가
+- [ ] `#01~#05` `TestNormalFailureReturn` 통과
+- [ ] `#11`, `#15` `TestIsolationVerification` (`none` spy) 통과
+- [ ] `#16`, `#20`, `#21` `TestMessageIdentity` (`none` 계열) 통과
+- [ ] 검증: `pytest tests/boundary/test_ac_fr_01_01_contract_violation.py -k "none" -q`
+
+#### GREEN-W2 — `grid == []` → `INVALID_SIZE`
+
+- [ ] `InputValidator.validate()` — 빈 리스트(`[]`) 분기 유지·정리
+- [ ] `#06`, `#09` `TestBoundaryValues` (`empty_list`) 통과
+- [ ] `#12` `TestIsolationVerification` (`empty_list` spy) 통과
+- [ ] `#17`, `#22` `TestMessageIdentity` (`empty_list` 계열) 통과
+- [ ] 검증: `pytest tests/boundary/test_ac_fr_01_01_contract_violation.py -k "empty_list" -q`
+
+#### GREEN-W3 — 4×4가 아닌 크기 → `INVALID_SIZE`
+
+- [ ] `InputValidator.validate()` — `len(rows) != 4` 또는 `any(len(row) != 4 for row in rows)` 분기
+- [ ] `#07`, `#08`, `#10` `TestBoundaryValues` (`empty_cols`, `3x4`) 통과
+- [ ] `#13`, `#14` `TestIsolationVerification` (`empty_cols`, `3x4` spy) 통과
+- [ ] `#18`, `#19`, `#23` `TestMessageIdentity` (`empty_cols`, `grid_3x4` 계열) 통과
+- [ ] 검증: `pytest tests/boundary/test_ac_fr_01_01_contract_violation.py::TestBoundaryValues tests/boundary/test_ac_fr_01_01_contract_violation.py::TestIsolationVerification tests/boundary/test_ac_fr_01_01_contract_violation.py::TestMessageIdentity -q`
+
+#### GREEN-W4 — 4종 그리드 통합 (W1+W2+W3 완료 시)
+
+- [ ] `#29` `test_in_scope_failure_codes_only_invalid_size` — `None`, `[]`, `GRID_EMPTY_COLS`, `GRID_3X4` 모두 `INVALID_SIZE`
+- [ ] `#24~#28` `TestScopeLimitation` — 구현 변경 없이 계속 통과 (AC-FR-01-02~08·FR-02~05 범위 밖)
+- [ ] 검증: `pytest tests/boundary/test_ac_fr_01_01_contract_violation.py -q` → **29 passed**
+
+#### GREEN 커밋 권장 (4~5건)
+
+| 커밋 | 묶음 | 검증 |
+|------|------|------|
+| 1 | W0 — 스키마·조기 반환 | `TestScopeLimitation -q` |
+| 2 | W1 — `None` | `-k "none" -q` |
+| 3 | W2 — `[]` | `-k "empty_list" -q` |
+| 4 | W3 + W4 — 크기 위반 + 통합 | 전체 파일 `-q` |
+
+> W4는 별도 구현이 거의 없으므로 **W3와 같은 커밋**에 포함해도 됩니다.
+
 ---
 
 ## 8. Quality Gates
@@ -160,11 +218,15 @@ MagicSquare_23/
 │   ├── 07.MagicSquare_README_TDD_Start_Report.md
 │   ├── 08.MagicSquare_TrackA_RED_Test_and_Defect_Report.md
 │   ├── 09.MagicSquare_DualTrack_RED_Design_Report.md
-│   └── 10.MagicSquare_DualTrack_RED_Skeleton_Test_Report.md
+│   ├── 10.MagicSquare_DualTrack_RED_Skeleton_Test_Report.md
+│   ├── 11.MagicSquare_TrackA_GREEN_01_EmptyGrid_Report.md
+│   └── 12.MagicSquare_TrackA_GREEN_Planning_Checklist_Report.md
 ├── Prompting/                         ← 워크숍 프롬프트·트랜스크립트
 │   ├── 05.MagicSquare_TrackA_RED_Test_Transcript.md
 │   ├── 06.MagicSquare_DualTrack_RED_Design_Transcript.md
-│   └── 07.MagicSquare_DualTrack_RED_Skeleton_Test_Transcript.md  (+ 01~04)
+│   ├── 07.MagicSquare_DualTrack_RED_Skeleton_Test_Transcript.md
+│   ├── 08.MagicSquare_TrackA_GREEN_01_EmptyGrid_Transcript.md
+│   └── 09.MagicSquare_TrackA_GREEN_Planning_Checklist_Transcript.md  (+ 01~04)
 ├── src/magicsquare/
 │   ├── boundary/                      ← Boundary 레이어 (구현 예정)
 │   ├── control/                       ← Control 레이어 (구현 예정)
@@ -223,6 +285,10 @@ MagicSquare_23/
 | [Prompting/06 — Dual-Track RED Transcript](Prompting/06.MagicSquare_DualTrack_RED_Design_Transcript.md) | RED 설계표 세션 Transcript |
 | [Report/10 — Dual-Track RED 스켈레톤](Report/10.MagicSquare_DualTrack_RED_Skeleton_Test_Report.md) | Report/09 기반 pytest 스켈레톤 23건 세션 보고서 |
 | [Prompting/07 — RED 스켈레톤 Transcript](Prompting/07.MagicSquare_DualTrack_RED_Skeleton_Test_Transcript.md) | RED 스켈레톤 테스트 세션 Transcript |
+| [Report/11 — Track A GREEN-01](Report/11.MagicSquare_TrackA_GREEN_01_EmptyGrid_Report.md) | GREEN 1차 슬라이스 (`grid=[]`) |
+| [Prompting/08 — GREEN-01 Transcript](Prompting/08.MagicSquare_TrackA_GREEN_01_EmptyGrid_Transcript.md) | GREEN-01 세션 Transcript |
+| [Report/12 — Track A GREEN 계획](Report/12.MagicSquare_TrackA_GREEN_Planning_Checklist_Report.md) | GREEN W0~W4 순서·README TODO 체크리스트 |
+| [Prompting/09 — GREEN 계획 Transcript](Prompting/09.MagicSquare_TrackA_GREEN_Planning_Checklist_Transcript.md) | GREEN 계획·체크리스트 세션 Transcript |
 
 ### Open Questions (미해결)
 
@@ -251,6 +317,7 @@ python -m pytest --cov=src/magicsquare --cov-report=term-missing
 |------|------|
 | 2026-05-28 | STEP 1~5 문제 정의 보고서 · README 초판 |
 | 2026-05-29 | PRD v1.1 · Dual-Track 설계 · 개발 환경 · README TDD 시작 선언 반영 |
+| 2026-05-29 | Track A GREEN 계획·README §7 GREEN TODO · Report/12 · Prompting/09 |
 
 ---
 
