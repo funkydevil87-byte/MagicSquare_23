@@ -12,6 +12,11 @@ class InputValidator:
     """Validates grid shape before Control/Domain invocation."""
 
     def validate(self, grid: Any) -> FailureResult | None:
+        if grid is None:
+            return FailureResult(
+                code=INVALID_SIZE_CODE,
+                message=INVALID_SIZE_MESSAGE,
+            )
         if grid == []:
             return FailureResult(
                 code=INVALID_SIZE_CODE,
