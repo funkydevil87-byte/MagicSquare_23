@@ -1,2 +1,0 @@
-"""MagicSquare application package."""
-

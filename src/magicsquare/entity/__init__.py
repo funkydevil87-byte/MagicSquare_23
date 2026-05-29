@@ -1,2 +1,0 @@
-"""Domain entities for MagicSquare."""
-
