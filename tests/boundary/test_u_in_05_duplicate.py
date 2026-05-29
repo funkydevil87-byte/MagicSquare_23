@@ -4,6 +4,9 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import pytest
+
+from magicsquare.boundary.exceptions import BoundaryValidationError
 from magicsquare.boundary.input_validator import InputValidator
 from tests.boundary.conftest import (
     DUPLICATE_VALUE_CODE,
@@ -28,5 +31,6 @@ class TestUIn05Duplicate:
     def test_u_in_05_boundary_solve_does_not_execute(
         self, execute_mock, boundary
     ) -> None:
-        boundary.solve(GRID_DUPLICATE)
+        with pytest.raises(BoundaryValidationError):
+            boundary.solve(GRID_DUPLICATE)
         execute_mock.assert_not_called()

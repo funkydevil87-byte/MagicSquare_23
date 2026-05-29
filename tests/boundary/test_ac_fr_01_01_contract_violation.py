@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import pytest
 
+from magicsquare.boundary.exceptions import BoundaryValidationError
 from tests.boundary.conftest import (
     GRID_3X4,
     GRID_EMPTY_COLS,
@@ -85,9 +86,10 @@ def _asserted_failure_codes(tree: ast.AST) -> set[str]:
     return codes
 
 
-def _assert_failure_result(result: Any) -> FailureResult:
-    assert isinstance(result, FailureResult)
-    return result
+def _expect_validation_failure(boundary: Any, grid: Any) -> BoundaryValidationError:
+    with pytest.raises(BoundaryValidationError) as exc_info:
+        boundary.solve(grid)
+    return exc_info.value
 
 
 class TestNormalFailureReturn:
@@ -101,10 +103,7 @@ class TestNormalFailureReturn:
         grid = None
 
         # When: Boundary processes the invalid grid
-        result = boundary.solve(grid)
-
-        # Then: a failure result is returned instead of a success vector
-        failure = _assert_failure_result(result)
+        failure = _expect_validation_failure(boundary, grid)
         assert failure.code == NULL_INPUT_CODE
 
     def test_none_grid_failure_code_is_null_input(self, boundary: Any) -> None:
@@ -113,10 +112,7 @@ class TestNormalFailureReturn:
         grid = None
 
         # When: Boundary returns the contract failure
-        result = boundary.solve(grid)
-
-        # Then: code is exactly NULL_INPUT
-        failure = _assert_failure_result(result)
+        failure = _expect_validation_failure(boundary, grid)
         assert failure.code == NULL_INPUT_CODE
 
     def test_none_grid_failure_message_is_present(self, boundary: Any) -> None:
@@ -125,26 +121,18 @@ class TestNormalFailureReturn:
         grid = None
 
         # When: Boundary returns the contract failure
-        result = boundary.solve(grid)
-
-        # Then: message field is populated with the PRD text
-        failure = _assert_failure_result(result)
+        failure = _expect_validation_failure(boundary, grid)
         assert failure.message == NULL_INPUT_MESSAGE
 
-    def test_none_grid_failure_is_pydantic_model(self, boundary: Any) -> None:
+    def test_none_grid_failure_exposes_code_and_message(self, boundary: Any) -> None:
         # AC-FR-01-01
         # Given: grid is None
         grid = None
 
-        # When: Boundary materializes the failure payload
-        result = boundary.solve(grid)
-
-        # Then: the payload conforms to FailureResult
-        failure = _assert_failure_result(result)
-        assert failure.model_dump() == {
-            "code": NULL_INPUT_CODE,
-            "message": NULL_INPUT_MESSAGE,
-        }
+        # When / Then: Boundary raises validation error with contract fields
+        failure = _expect_validation_failure(boundary, grid)
+        assert failure.code == NULL_INPUT_CODE
+        assert failure.message == NULL_INPUT_MESSAGE
 
     def test_none_grid_does_not_return_success_int_vector(self, boundary: Any) -> None:
         # AC-FR-01-01
@@ -152,11 +140,8 @@ class TestNormalFailureReturn:
         grid = None
 
         # When: Boundary handles the request
-        result = boundary.solve(grid)
-
-        # Then: success shape int[6] is never returned
-        assert not isinstance(result, list)
-        _assert_failure_result(result)
+        with pytest.raises(BoundaryValidationError):
+            boundary.solve(grid)
 
 
 class TestBoundaryValues:
@@ -168,10 +153,7 @@ class TestBoundaryValues:
         grid: list[list[int]] = []
 
         # When: Boundary validates the grid
-        result = boundary.solve(grid)
-
-        # Then: failure result is returned
-        _assert_failure_result(result)
+        _expect_validation_failure(boundary, grid)
 
     def test_empty_cols_grid_returns_failure_result(self, boundary: Any) -> None:
         # AC-FR-01-01
@@ -179,10 +161,7 @@ class TestBoundaryValues:
         grid = GRID_EMPTY_COLS
 
         # When: Boundary validates the grid
-        result = boundary.solve(grid)
-
-        # Then: failure result is returned
-        _assert_failure_result(result)
+        _expect_validation_failure(boundary, grid)
 
     def test_3x4_grid_returns_failure_result(self, boundary: Any) -> None:
         # AC-FR-01-01
@@ -190,10 +169,7 @@ class TestBoundaryValues:
         grid = GRID_3X4
 
         # When: Boundary validates the grid
-        result = boundary.solve(grid)
-
-        # Then: failure result is returned
-        _assert_failure_result(result)
+        _expect_validation_failure(boundary, grid)
 
     def test_empty_list_failure_code_is_invalid_row_count(self, boundary: Any) -> None:
         # AC-FR-01-01 / AC-FR01-04
@@ -201,10 +177,7 @@ class TestBoundaryValues:
         grid: list[list[int]] = []
 
         # When: Boundary returns failure
-        result = boundary.solve(grid)
-
-        # Then: code is INVALID_ROW_COUNT
-        failure = _assert_failure_result(result)
+        failure = _expect_validation_failure(boundary, grid)
         assert failure.code == INVALID_ROW_COUNT_CODE
 
     def test_3x4_failure_message_matches_invalid_row_count_text(
@@ -215,10 +188,7 @@ class TestBoundaryValues:
         grid = GRID_3X4
 
         # When: Boundary returns failure
-        result = boundary.solve(grid)
-
-        # Then: message matches PRD §13.1 row-count wording
-        failure = _assert_failure_result(result)
+        failure = _expect_validation_failure(boundary, grid)
         assert failure.message == INVALID_ROW_COUNT_MESSAGE
 
 
@@ -234,7 +204,8 @@ class TestIsolationVerification:
         grid = None
 
         # When: Boundary handles the invalid request
-        boundary.solve(grid)
+        with pytest.raises(BoundaryValidationError):
+            boundary.solve(grid)
 
         # Then: Domain resolve() is never entered
         mock_resolve.assert_not_called()
@@ -248,7 +219,8 @@ class TestIsolationVerification:
         grid: list[list[int]] = []
 
         # When: Boundary handles the invalid request
-        boundary.solve(grid)
+        with pytest.raises(BoundaryValidationError):
+            boundary.solve(grid)
 
         # Then: Domain resolve() is never entered
         mock_resolve.assert_not_called()
@@ -262,7 +234,8 @@ class TestIsolationVerification:
         grid = GRID_EMPTY_COLS
 
         # When: Boundary handles the invalid request
-        boundary.solve(grid)
+        with pytest.raises(BoundaryValidationError):
+            boundary.solve(grid)
 
         # Then: Domain resolve() is never entered
         mock_resolve.assert_not_called()
@@ -276,7 +249,8 @@ class TestIsolationVerification:
         grid = GRID_3X4
 
         # When: Boundary handles the invalid request
-        boundary.solve(grid)
+        with pytest.raises(BoundaryValidationError):
+            boundary.solve(grid)
 
         # Then: Domain resolve() is never entered
         mock_resolve.assert_not_called()
@@ -290,7 +264,8 @@ class TestIsolationVerification:
         grid = None
 
         # When: Boundary completes failure handling
-        boundary.solve(grid)
+        with pytest.raises(BoundaryValidationError):
+            boundary.solve(grid)
 
         # Then: call_count remains zero (mock failure if invoked)
         assert mock_resolve.call_count == 0
@@ -301,41 +276,37 @@ class TestMessageIdentity:
     """AC-FR-01-01 — message must match PRD text character-for-character."""
 
     def test_none_grid_message_exact(self, boundary: Any) -> None:
-        result = boundary.solve(None)
-        failure = _assert_failure_result(result)
+        failure = _expect_validation_failure(boundary, None)
         assert failure.message == NULL_INPUT_MESSAGE
 
     def test_empty_list_message_exact(self, boundary: Any) -> None:
-        result = boundary.solve([])
-        failure = _assert_failure_result(result)
+        failure = _expect_validation_failure(boundary, [])
         assert failure.message == INVALID_ROW_COUNT_MESSAGE
 
     def test_empty_cols_message_exact(self, boundary: Any) -> None:
-        result = boundary.solve(GRID_EMPTY_COLS)
-        failure = _assert_failure_result(result)
+        failure = _expect_validation_failure(boundary, GRID_EMPTY_COLS)
         assert failure.message == INVALID_COL_COUNT_MESSAGE
 
     def test_3x4_message_exact(self, boundary: Any) -> None:
-        result = boundary.solve(GRID_3X4)
-        failure = _assert_failure_result(result)
+        failure = _expect_validation_failure(boundary, GRID_3X4)
         assert failure.message == INVALID_ROW_COUNT_MESSAGE
 
     def test_none_grid_message_length_matches_prd_text(self, boundary: Any) -> None:
-        failure = _assert_failure_result(boundary.solve(None))
+        failure = _expect_validation_failure(boundary, None)
         assert len(failure.message) == len(NULL_INPUT_MESSAGE)
 
     def test_none_grid_code_exact_null_input_string(self, boundary: Any) -> None:
-        failure = _assert_failure_result(boundary.solve(None))
+        failure = _expect_validation_failure(boundary, None)
         assert failure.code == NULL_INPUT_CODE
         assert failure.code.strip() == failure.code
 
     def test_empty_list_message_no_extra_whitespace(self, boundary: Any) -> None:
-        failure = _assert_failure_result(boundary.solve([]))
+        failure = _expect_validation_failure(boundary, [])
         assert failure.message == INVALID_ROW_COUNT_MESSAGE
         assert failure.message.strip() == failure.message
 
     def test_3x4_message_bytes_equal_prd_literal(self, boundary: Any) -> None:
-        failure = _assert_failure_result(boundary.solve(GRID_3X4))
+        failure = _expect_validation_failure(boundary, GRID_3X4)
         assert failure.message.encode("utf-8") == INVALID_ROW_COUNT_MESSAGE.encode(
             "utf-8"
         )
@@ -415,7 +386,7 @@ class TestScopeLimitation:
             (GRID_3X4, INVALID_ROW_COUNT_CODE),
         ]
         for grid, expected_code in cases:
-            failure = _assert_failure_result(boundary.solve(grid))
+            failure = _expect_validation_failure(boundary, grid)
             assert failure.code == expected_code
             assert failure.code not in FORBIDDEN_ERROR_CODES - {
                 expected_code,

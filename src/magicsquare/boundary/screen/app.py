@@ -17,7 +17,7 @@ from tkinter import font as tkfont
 from tkinter import ttk
 from typing import Any
 
-from magicsquare.boundary.exceptions import UnsolvableError
+from magicsquare.boundary.exceptions import BoundaryValidationError, UnsolvableError
 from magicsquare.boundary.magic_square_boundary import MagicSquareBoundary
 from magicsquare.boundary.schemas import GRID_SIZE, FailureResult
 
@@ -160,6 +160,14 @@ class MagicSquareApp:
 
         try:
             result = self._boundary.solve(grid)
+        except BoundaryValidationError as exc:
+            self._set_result(
+                f"Boundary validation failed\n"
+                f"  code: {exc.code}\n"
+                f"  message: {exc.message}",
+                "error",
+            )
+            return
         except UnsolvableError as exc:
             self._set_result(
                 f"Boundary solve failed\n"

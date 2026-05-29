@@ -303,7 +303,7 @@ MagicSquare_23/
 | FR-01 전체 + test_u_* GREEN | ✅ 완료 | Report/15 |
 | Boundary E2E + D-T22 | ✅ 완료 | `test_boundary_e2e.py`, `test_d_sol_22` |
 | Magic Square 본 기능 (FR-02~05) | ✅ 완료 | Entity/Control/Boundary E2E |
-| Golden Master (GM-01~10) | ✅ 완료 | Report/16 · 78 passed |
+| Golden Master (GM-01~10) | ✅ 완료 | Report/16 · **91 passed** |
 | ECB REFACTOR 계획 | ✅ 완료 (계획만) | Report/17 · README §REFACTOR TODO |
 
 ### Track A GREEN 진행 (AC-FR-01-01)
@@ -340,16 +340,16 @@ MagicSquare_23/
 - [x] **RF-01-04**: `load_grid()` — 0→빈칸 표시
 - [x] **RF-01-05**: `pytest tests/boundary/screen/ -q` → GREEN (**13 passed**)
 
-### High — 그룹 2: 계약 · E001~E007 · 검증 SSOT (Contract)
+### High — 그룹 2: 계약 · E001~E007 · 검증 SSOT (Contract) ✅
 
 > 외부 API·Error Code·입력 검증 드리프트 방지. 계약 깨짐 리스크 최대.
 
-- [ ] **RF-02-01**: E001~E005 — `FailureResult` 반환 → PRD §13 **예외 throw** (code/message 동일)
-- [ ] **RF-02-02**: E006 `UNSOLVABLE` — `UnsolvableError` 매핑 유지
-- [ ] **RF-02-03**: `test_u_*` · AC-FR-01-01 · Golden Master 회귀 GREEN
-- [ ] **RF-06-01**: `input_validator` — `bool` 셀 거부 (`type(value) is int`)
-- [ ] **RF-06-02**: `16` → Entity `CELL_MAX` SSOT
-- [ ] **RF-06-03**: `test_u_in_04_*` + bool·범위 경계 테스트 GREEN
+- [x] **RF-02-01**: E001~E005 — `FailureResult` 반환 → PRD §13 **예외 throw** (`BoundaryValidationError`)
+- [x] **RF-02-02**: E006 `UNSOLVABLE` — `UnsolvableError` 매핑 유지
+- [x] **RF-02-03**: `test_u_*` · AC-FR-01-01 · Golden Master 회귀 GREEN
+- [x] **RF-06-01**: `input_validator` — `bool` 셀 거부 (`type(value) is int`)
+- [x] **RF-06-02**: `16` → Entity `CELL_MAX` SSOT
+- [x] **RF-06-03**: bool·범위 경계 테스트 GREEN
 
 ### High — 그룹 3: 구조 · ECB 레이어 분리 (Architecture)
 
