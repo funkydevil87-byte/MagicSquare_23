@@ -6,8 +6,8 @@ from typing import Any
 
 from magicsquare.boundary.exceptions import BoundaryValidationError, UnsolvableError
 from magicsquare.boundary.input_validator import InputValidator
+from magicsquare.control.exceptions import SolveUnsolvableError
 from magicsquare.control.magic_square_solver import MagicSquareSolver
-from magicsquare.entity.exceptions import UnsolvableDomainError
 
 
 class MagicSquareBoundary:
@@ -35,5 +35,5 @@ class MagicSquareBoundary:
             raise BoundaryValidationError(failure.code, failure.message)
         try:
             return self._solver.resolve(grid)
-        except UnsolvableDomainError:
+        except SolveUnsolvableError:
             raise UnsolvableError from None

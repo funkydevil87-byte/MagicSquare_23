@@ -19,7 +19,8 @@ from typing import Any
 
 from magicsquare.boundary.exceptions import BoundaryValidationError, UnsolvableError
 from magicsquare.boundary.magic_square_boundary import MagicSquareBoundary
-from magicsquare.boundary.schemas import GRID_SIZE, FailureResult
+from magicsquare.boundary.result_formatter import ResultFormatter
+from magicsquare.boundary.schemas import GRID_SIZE
 
 SAMPLE_G1: list[list[int]] = [
     [16, 3, 2, 13],
@@ -162,17 +163,13 @@ class MagicSquareApp:
             result = self._boundary.solve(grid)
         except BoundaryValidationError as exc:
             self._set_result(
-                f"Boundary validation failed\n"
-                f"  code: {exc.code}\n"
-                f"  message: {exc.message}",
+                ResultFormatter.format_validation_failure(exc.code, exc.message),
                 "error",
             )
             return
         except UnsolvableError as exc:
             self._set_result(
-                f"Boundary solve failed\n"
-                f"  code: {exc.code}\n"
-                f"  message: {exc.message}",
+                ResultFormatter.format_unsolvable(exc.code, exc.message),
                 "error",
             )
             return
@@ -205,29 +202,11 @@ class MagicSquareApp:
         return grid
 
     def _display_result(self, result: Any) -> None:
-        if isinstance(result, FailureResult) or (
-            hasattr(result, "code") and hasattr(result, "message")
-        ):
-            self._set_result(
-                f"Boundary validation failed\n"
-                f"  code: {result.code}\n"
-                f"  message: {result.message}",
-                "error",
-            )
-            return
-
         if isinstance(result, (list, tuple)) and len(result) == 6:
-            r1, c1, n1, r2, c2, n2 = result
-            self._set_result(
-                "Solve succeeded\n"
-                f"  blank ({r1},{c1}) ← {n1}\n"
-                f"  blank ({r2},{c2}) ← {n2}\n"
-                f"  vector: {list(result)}",
-                "success",
-            )
+            self._set_result(ResultFormatter.format_success(list(result)), "success")
             return
 
-        self._set_result(f"Unknown result type: {result!r}", "warning")
+        self._set_result(ResultFormatter.format_unknown(result), "warning")
 
     def _set_result(self, text: str, tone: str) -> None:
         self._result_var.set(text)

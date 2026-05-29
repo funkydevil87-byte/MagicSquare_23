@@ -305,6 +305,7 @@ MagicSquare_23/
 | Magic Square 본 기능 (FR-02~05) | ✅ 완료 | Entity/Control/Boundary E2E |
 | Golden Master (GM-01~10) | ✅ 완료 | Report/16 · **91 passed** |
 | ECB REFACTOR 계획 | ✅ 완료 (계획만) | Report/17 · README §REFACTOR TODO |
+| ECB REFACTOR High 3그룹 | ✅ 완료 | Report/18 · RF-01~06 · **102 passed** |
 
 ### Track A GREEN 진행 (AC-FR-01-01)
 
@@ -315,17 +316,17 @@ MagicSquare_23/
 | GREEN-04 `GRID_3X4` | `TestBoundaryValues::test_3x4_grid_returns_failure_result` | ✅ |
 | GREEN-W4 통합 | `test_ac_fr_01_01_contract_violation.py` 전체 | ✅ **29 passed** |
 
-### 다음 단계 (REFACTOR 착수 전)
+### 다음 단계 (REFACTOR High 3그룹 완료 후)
 
-1. README §REFACTOR **High 3그룹** 순서: 그룹 1 → 2 → 3
-2. PRD throw vs `FailureResult` SSOT 확정 (RF-DQ-01)
-3. GUI 수동 검증 — `python -m magicsquare.boundary.screen.app`
+1. README §REFACTOR **Medium/Low** (RF-07~RF-17) — Screen 위임·네이밍·dead code
+2. GUI 수동 검증 — `python -m magicsquare.boundary.screen.app`
+3. PRD throw vs `FailureResult` SSOT 확정 (RF-DQ-01) — Boundary 내부 `InputValidator` 잔류
 
 ---
 
 ## REFACTOR 단계 To-Do 리스트
 
-> **전제**: GREEN **78 passed** · Golden Master GM-01~10 완료 · REFACTOR = **동작 불변** 구조 개선  
+> **전제**: GREEN **102 passed** · Golden Master GM-01~10 완료 · REFACTOR = **동작 불변** 구조 개선  
 > **근거**: `Report/17.MagicSquare_ECB_REFACTOR_Planning_Report.md` · `.cursor/rules/magicsquare-tdd-testing.mdc` §REFACTOR  
 > **파일 매핑**: `domain.py` → `control/solve_partial_magic_square.py` · `ui_boundary` → `boundary/magic_square_boundary.py` · `main_window` → `boundary/screen/app.py`  
 > **실행 순서**: **그룹 1 → 그룹 2 → 그룹 3** (각 그룹 내 RF-ID 오름차순)
@@ -351,18 +352,18 @@ MagicSquare_23/
 - [x] **RF-06-02**: `16` → Entity `CELL_MAX` SSOT
 - [x] **RF-06-03**: bool·범위 경계 테스트 GREEN
 
-### High — 그룹 3: 구조 · ECB 레이어 분리 (Architecture)
+### High — 그룹 3: 구조 · ECB 레이어 분리 (Architecture) ✅
 
 > Control/Boundary/Screen에 섞인 Entity·직렬화 책임 분리. Attempt·`int[6]` 회귀 주의.
 
-- [ ] **RF-03-01**: `UnsolvableDomainError` catch → `control/magic_square_solver.py`로 이동
-- [ ] **RF-03-02**: `magic_square_boundary.py` — Entity import 제거 (`boundary→control`만)
-- [ ] **RF-04-01**: `_attempt` → `entity/services/two_cell_solver.py` 추출 (complete+validate 시도)
-- [ ] **RF-04-02**: `solve_partial_magic_square.execute` — Attempt 1/2 **순서만**
-- [ ] **RF-04-03**: `tests/entity/test_two_cell_solver.py` · D-SOL-01~04/22 GREEN
-- [ ] **RF-05-01**: `int[6]` → `boundary/result_formatter.py` SSOT
-- [ ] **RF-05-02**: Screen `_display_result` — Formatter 위임
-- [ ] **RF-05-03**: `tests/boundary/test_result_formatter.py` GREEN
+- [x] **RF-03-01**: `UnsolvableDomainError` catch → `control/magic_square_solver.py`로 이동 (`SolveUnsolvableError`)
+- [x] **RF-03-02**: `magic_square_boundary.py` — Entity import 제거 (`boundary→control`만)
+- [x] **RF-04-01**: `_attempt` → `entity/services/two_cell_solver.py` 추출 (complete+validate 시도)
+- [x] **RF-04-02**: `solve_partial_magic_square.execute` — Attempt 1/2 **순서만**
+- [x] **RF-04-03**: `tests/entity/test_two_cell_solver.py` · D-SOL-01~04 GREEN (D-T22는 Control `test_d_sol_22`)
+- [x] **RF-05-01**: `int[6]` → `boundary/result_formatter.py` SSOT
+- [x] **RF-05-02**: Screen `_display_result` / `on_solve` — Formatter 위임
+- [x] **RF-05-03**: `tests/boundary/test_result_formatter.py` GREEN (**5 passed**)
 
 ### Medium / Low — High 3그룹 완료 후 (RF-07~RF-17)
 
@@ -422,6 +423,8 @@ python -m pytest --cov=src/magicsquare --cov-report=term-missing
 | [Prompting/13 — Golden Master Transcript](Prompting/13.MagicSquare_Golden_Master_Regression_Transcript.md) | Golden Master 세션 Transcript |
 | [Report/17 — ECB REFACTOR 계획](Report/17.MagicSquare_ECB_REFACTOR_Planning_Report.md) | 코드 리뷰·ECB/SRP·REFACTOR 17건 우선순위 |
 | [Prompting/14 — REFACTOR 계획 Transcript](Prompting/14.MagicSquare_ECB_REFACTOR_Planning_Transcript.md) | REFACTOR 계획 세션 Transcript |
+| [Report/18 — REFACTOR High 3그룹](Report/18.MagicSquare_REFACTOR_High3Groups_Report.md) | RF-01~06 구현·회귀 GREEN 세션 |
+| [Prompting/15 — REFACTOR High 3그룹 Transcript](Prompting/15.MagicSquare_REFACTOR_High3Groups_Transcript.md) | REFACTOR High 3그룹 세션 Transcript |
 
 ### Open Questions (미해결)
 
@@ -465,6 +468,9 @@ python -m magicsquare.boundary.screen.app
 | 2026-05-29 | Golden Master GM-01~GM-10 · Report/16 · Prompting/13 · 78 tests passed |
 | 2026-05-29 | ECB REFACTOR 계획 · README §REFACTOR TODO RF-01~17 · Report/17 · Prompting/14 |
 | 2026-05-29 | README §REFACTOR — High 3그룹( Test → Contract → Architecture ) 요약 정리 |
+| 2026-05-29 | REFACTOR 그룹 1 — Screen characterization RF-01 (**13 passed**) · Report/18 |
+| 2026-05-29 | REFACTOR 그룹 2 — Boundary throw RF-02/RF-06 · **92 passed** |
+| 2026-05-29 | REFACTOR 그룹 3 — ECB 분리 RF-03~05 · **102 passed** · Report/18 · Prompting/15 |
 
 ---
 

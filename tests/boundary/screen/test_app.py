@@ -6,8 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from magicsquare.boundary.exceptions import UnsolvableError
-from magicsquare.boundary.schemas import FailureResult
+from magicsquare.boundary.exceptions import BoundaryValidationError, UnsolvableError
 from magicsquare.boundary.screen.app import MagicSquareApp, SAMPLE_G1
 from magicsquare.entity.constants import GRID_SIZE
 from tests.boundary.screen.conftest import assert_label_foreground
@@ -45,16 +44,7 @@ class TestReadGrid:
 
 
 class TestDisplayResult:
-    """RF-01-02 — _display_result() formats Boundary outcomes."""
-
-    def test_failure_result_shows_code_and_message(self, app: MagicSquareApp) -> None:
-        failure = FailureResult(code="NULL_INPUT", message="Input matrix must not be null.")
-        app._display_result(failure)
-        text = app._result_var.get()
-        assert "Boundary validation failed" in text
-        assert "NULL_INPUT" in text
-        assert "Input matrix must not be null." in text
-        assert_label_foreground(app, "#b91c1c")
+    """RF-01-02 / RF-05-02 — _display_result() delegates to ResultFormatter."""
 
     def test_success_vector_shows_coordinates(self, app: MagicSquareApp) -> None:
         app._display_result([2, 2, 10, 3, 3, 7])
@@ -87,6 +77,23 @@ class TestOnSolve:
         app.on_solve()
         app._boundary.solve.assert_called_once()
         display_mock.assert_called_once_with([1, 2, 3, 1, 4, 13])
+
+    @patch.object(MagicSquareApp, "_read_grid", return_value=[[0] * GRID_SIZE for _ in range(GRID_SIZE)])
+    def test_validation_error_shown_in_result(
+        self,
+        _read_mock: MagicMock,
+        app: MagicSquareApp,
+    ) -> None:
+        app._boundary = MagicMock()
+        app._boundary.solve.side_effect = BoundaryValidationError(
+            "NULL_INPUT",
+            "Input matrix must not be null.",
+        )
+        app.on_solve()
+        text = app._result_var.get()
+        assert "Boundary validation failed" in text
+        assert "NULL_INPUT" in text
+        assert_label_foreground(app, "#b91c1c")
 
     @patch.object(MagicSquareApp, "_read_grid", return_value=[[0] * GRID_SIZE for _ in range(GRID_SIZE)])
     def test_unsolvable_error_shown_in_result(
