@@ -158,15 +158,21 @@ MagicSquare_23/
 │   ├── 04.CursorAgents_Setup_Report.md
 │   ├── 05.MagicSquare_PRD_Review_Report.md
 │   ├── 07.MagicSquare_README_TDD_Start_Report.md
-│   └── 08.MagicSquare_TrackA_RED_Test_and_Defect_Report.md
+│   ├── 08.MagicSquare_TrackA_RED_Test_and_Defect_Report.md
+│   ├── 09.MagicSquare_DualTrack_RED_Design_Report.md
+│   └── 10.MagicSquare_DualTrack_RED_Skeleton_Test_Report.md
 ├── Prompting/                         ← 워크숍 프롬프트·트랜스크립트
-│   └── 05.MagicSquare_TrackA_RED_Test_Transcript.md  (+ 01~04)
+│   ├── 05.MagicSquare_TrackA_RED_Test_Transcript.md
+│   ├── 06.MagicSquare_DualTrack_RED_Design_Transcript.md
+│   └── 07.MagicSquare_DualTrack_RED_Skeleton_Test_Transcript.md  (+ 01~04)
 ├── src/magicsquare/
 │   ├── boundary/                      ← Boundary 레이어 (구현 예정)
 │   ├── control/                       ← Control 레이어 (구현 예정)
 │   └── entity/                        ← Entity 레이어 (User TDD 완료)
 ├── tests/
-│   └── entity/test_user.py            ← User 엔티티 테스트 (6 passed)
+│   ├── conftest.py                    ← G0~G3 fixture placeholder
+│   ├── boundary/                      ← Track A RED (Report/08 + test_u_*)
+│   └── entity/                        ← User GREEN + test_d_* RED skeleton
 └── .cursor/
     ├── rules/                         ← 프로젝트 Cursor Rules
     └── agents/                        ← 역할별 Cursor Agent 정의
@@ -212,7 +218,11 @@ MagicSquare_23/
 | [docs/test_plan.md](docs/test_plan.md) | Track A Boundary RED 테스트 계획 |
 | [defect_list.md](defect_list.md) | RED 실행 결함 목록 · 회귀 체크리스트 |
 | [Report/08 — Track A RED·결함](Report/08.MagicSquare_TrackA_RED_Test_and_Defect_Report.md) | RED 테스트·결함 세션 보고서 |
-| [Prompting/05 — Track A RED Transcript](Prompting/05.MagicSquare_TrackA_RED_Test_Transcript.md) | 본 세션 대화형 Transcript |
+| [Prompting/05 — Track A RED Transcript](Prompting/05.MagicSquare_TrackA_RED_Test_Transcript.md) | Track A RED·결함 세션 Transcript |
+| [Report/09 — Dual-Track RED 설계](Report/09.MagicSquare_DualTrack_RED_Design_Report.md) | FR-01~05 RED 설계표 세션 보고서 |
+| [Prompting/06 — Dual-Track RED Transcript](Prompting/06.MagicSquare_DualTrack_RED_Design_Transcript.md) | RED 설계표 세션 Transcript |
+| [Report/10 — Dual-Track RED 스켈레톤](Report/10.MagicSquare_DualTrack_RED_Skeleton_Test_Report.md) | Report/09 기반 pytest 스켈레톤 23건 세션 보고서 |
+| [Prompting/07 — RED 스켈레톤 Transcript](Prompting/07.MagicSquare_DualTrack_RED_Skeleton_Test_Transcript.md) | RED 스켈레톤 테스트 세션 Transcript |
 
 ### Open Questions (미해결)
 
