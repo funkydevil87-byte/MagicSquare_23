@@ -1,0 +1,234 @@
+################################################################################
+project:
+  name: MagicSquare_1004
+  description: 4×4 마방진 부분 격자(빈칸 2개) 해결 프로그램
+  domain: 1~16 정수를 4×4 격자에 배치, 행·열·대각선 합 34 검증
+  input_contract: "4×4 int[][], 빈칸 0 정확히 2개, 값 0 또는 1~16, 0 제외 중복 금지"
+  output_contract: "int[6] = [r1,c1,n1,r2,c2,n2], 좌표 1-index"
+  tdd_approach: Dual-Track (Logic Track + UI Contract Track)
+  ssot_documents:
+    - Report/01.MagicSquare_ProblemDefinition_Report.md
+    - Report/02.MagicSquare_DualTrack_TDD_Design_Report.md
+
+################################################################################
+code_style:
+  python_version: "3.10+"
+  style_guide: PEP8 엄격 준수
+  type_hints: 모든 함수 파라미터와 반환값에 필수
+  docstring: Google 스타일, 모든 public 메서드에 필수
+  max_line_length: 88
+  formatter: Black (max_line_length 88 기준)
+  import_order: 표준 라이브러리 → 서드파티 → 로컬 (그룹 간 빈 줄)
+  naming:
+    modules: snake_case
+    classes: PascalCase
+    functions: snake_case
+    constants: UPPER_SNAKE_CASE
+
+################################################################################
+architecture:
+  pattern: ECB (Entity-Control-Boundary)
+  layers:
+    boundary:
+      role: 외부 입출력 담당 (UI, API, CLI)
+      responsibilities:
+        - 입력 계약 검증 (E001~E005)
+        - Domain 결과를 int[6] 또는 Error schema로 직렬화
+        - Domain 예외를 표준 에러 코드(E006, E007)로 변환
+      examples:
+        - UIBoundary
+        - InputValidator
+        - ErrorMapper
+      must_not:
+        - Domain 알고리즘 직접 구현
+        - Entity 내부 상태 직접 변경
+    control:
+      role: 비즈니스 로직·유스케이스 오케스트레이션 담당
+      responsibilities:
+        - Entity/Domain Service 호출 순서 조율
+        - 유스케이스 흐름 제어 (locate → find → solve)
+        - 트랜잭션적 실행 경계 (단일 execute 진입점)
+      examples:
+        - SolvePartialMagicSquare
+      must_not:
+        - 입출력 형식 검증 (Boundary 책임)
+        - UI/에러 메시지 문자열 하드코딩
+    entity:
+      role: 도메인 데이터 및 규칙 담당
+      responsibilities:
+        - Grid, Value Object, Domain Service, Validator
+        - 불변조건 I1~I11 검증
+        - 순수 도메인 로직 (프레임워크·I/O 무의존)
+      examples:
+        - Grid
+        - MagicSquareValidator
+        - TwoCellSolver
+        - EmptyCellLocator
+      must_not:
+        - Boundary/Control 레이어 import
+        - 입력 스키마(E001 등) 처리
+  dependency_direction:
+    allowed:
+      - "boundary → control"
+      - "boundary → entity (VO 변환·매핑 목적만)"
+      - "control → entity"
+    forbidden:
+      - "entity → control"
+      - "entity → boundary"
+      - "control → boundary"
+  dual_track:
+    logic_track: Entity/Control 테스트 — Domain Mock 금지
+    ui_track: Boundary 테스트 — Control/Entity Mock 허용
+
+################################################################################
+tdd_rules:
+  red_phase:
+    description: 실패하는 테스트를 먼저 작성하고, pytest로 RED를 확인한 뒤에만 구현을 시작한다
+    rules:
+      - 구현 코드보다 테스트 코드를 먼저 작성한다
+      - pytest 실행으로 해당 테스트가 RED(실패)임을 확인한다
+      - 실패 원인이 "아직 구현 없음" 또는 "기대 동작 미충족"이어야 한다
+      - Report 테스트 ID(D-VAL-01, U-IN-01 등)와 대응하는 테스트를 작성한다
+      - Dual-Track 규칙을 준수한다 (Logic Track vs UI Mock Track)
+    must_not:
+      - RED 확인 없이 production 코드 작성·수정
+      - 테스트를 통과시키기 위해 assert 완화·skip·xfail 적용
+      - GREEN을 목표로 한 선제적 구현
+  green_phase:
+    description: RED 테스트를 통과시키기 위한 최소 구현만 작성한다
+    rules:
+      - 현재 실패 중인 테스트를 GREEN으로 만드는 데 필요한 최소 코드만 작성한다
+      - pytest로 대상 테스트가 모두 통과(GREEN)했는지 확인한다
+      - 통과 후에만 refactor_phase로 진행한다
+    must_not:
+      - 테스트 통과에 불필요한 기능·추상화 추가
+      - 리팩터링·구조 개선·중복 제거 (refactor_phase에서 수행)
+      - 여러 RED 테스트를 한 번에 무분별하게 구현
+  refactor_phase:
+    description: GREEN 상태를 유지한 채 내부 구조만 개선한다
+    rules:
+      - pytest 전체가 통과하는 상태에서만 리팩터링한다
+      - 기능·동작·공개 API·에러 계약(E001~E007)을 변경하지 않는다
+      - 리팩터링 전후 커버리지 80% 이상을 유지한다
+      - ECB 레이어 경계와 SRP를 강화하는 방향으로 개선한다
+    must_not:
+      - 테스트 삭제·약화·주석 처리로 GREEN 유지
+      - 리팩터링 명목으로 동작 변경
+      - Entity에 Boundary 책임 흡수 또는 그 역
+
+################################################################################
+testing:
+  framework: pytest
+  pattern: AAA (Arrange-Act-Assert)
+  coverage_minimum: 80%
+  fixture_scope:
+    function: 테스트별 격자·입력 데이터 (기본값, 대부분의 단위 테스트)
+    module: Report 부록 G1 등 공유 4×4 격자 픽스처 (동일 모듈 내 재사용)
+    session: 프로젝트 전역 상수(MagicConstant=34) 등 불변 리소스만
+    rules:
+      - 테스트 간 mutable 상태 공유 금지 (function scope 우선)
+      - Mock은 UI Track 테스트(boundary)에서만 Control/Entity에 사용
+      - Logic Track 테스트(entity/control)에서 Domain Mock 금지
+  naming_convention: test_ 접두사 필수
+  test_id_mapping:
+    entity: "test_d_val_01_*, test_d_loc_01_* (Domain RED ID 대응)"
+    boundary: "test_u_in_01_*, test_u_out_01_* (UI Contract ID 대응)"
+  aaa_comment: "# Arrange / # Act / # Assert 주석 또는 빈 줄로 구분"
+  run_commands:
+    all: pytest
+    entity: pytest tests/entity
+    boundary: pytest tests/boundary
+
+################################################################################
+forbidden:
+  print_debugging:
+    pattern: "print() 로 디버깅"
+    reason: 테스트 기반 검증을 우회하고 stdout 노이즈를 만든다
+    alternative: pytest assertion, logging 모듈 (level=DEBUG, 테스트에서 caplog 활용)
+  hardcoded_magic_constant:
+    pattern: "코드 전역에 34, 16 등 도메인 상수를 리터럴로 산재"
+    reason: MagicConstant 단일 진실 원천(SSOT)을 깨고 변경 시 누락을 유발한다
+    alternative: entity/value_objects/magic_constant.py 의 MagicConstant 사용
+  bare_except:
+    pattern: "except: 또는 except Exception: 후 pass/무시"
+    reason: Domain/Boundary 계약 위반과 내부 오류를 구분하지 못한다
+    alternative: 구체적 Domain 예외(UnsolvableDomainError 등) catch 후 Error schema 매핑
+  implementation_without_red:
+    pattern: "실패 테스트 없이 production 코드 작성"
+    reason: tdd_rules.red_phase 위반, 요구사항 추적성 상실
+    alternative: 테스트 먼저 작성 → pytest RED 확인 → green_phase 진입
+  test_weakening:
+    pattern: "assert 완화, 테스트 삭제, skip/xfail, mock 남용으로 GREEN 만들기"
+    reason: 회귀 방어 상실, Dual-Track 계약 검증 무력화
+    alternative: production 코드를 수정해 원래 assert를 만족시킨다
+  cross_layer_import:
+    pattern: "entity → boundary/control import"
+    reason: ECB dependency_direction.forbidden 위반
+    alternative: 의존성 역전 — Boundary가 Control port를 호출, Control이 Entity 사용
+
+################################################################################
+file_structure:
+  tree: |
+    MagicSquare_1004/
+    ├── src/
+    │   ├── boundary/          # UIBoundary, InputValidator, ErrorMapper
+    │   │   ├── __init__.py
+    │   │   ├── ui_boundary.py
+    │   │   ├── input_validator.py
+    │   │   └── error_mapper.py
+    │   ├── control/           # SolvePartialMagicSquare (유스케이스)
+    │   │   ├── __init__.py
+    │   │   └── solve_partial_magic_square.py
+    │   └── entity/            # Grid, Validator, Solver, Value Objects
+    │       ├── __init__.py
+    │       ├── grid.py
+    │       ├── services/
+    │       │   ├── empty_cell_locator.py
+    │       │   ├── missing_number_finder.py
+    │       │   ├── magic_square_validator.py
+    │       │   └── two_cell_solver.py
+    │       ├── value_objects/
+    │       │   ├── cell_coordinate.py
+    │       │   ├── empty_cell_pair.py
+    │       │   ├── missing_number_pair.py
+    │       │   ├── magic_constant.py
+    │       │   └── solution_result.py
+    │       └── exceptions/
+    │           └── domain_errors.py
+    ├── tests/
+    │   ├── conftest.py        # 공유 fixture (G1 격자 등)
+    │   ├── entity/            # Logic Track — Domain RED (Mock 금지)
+    │   │   └── test_*.py
+    │   └── boundary/          # UI Contract Track — Mock Control/Entity
+    │       └── test_*.py
+    ├── Report/                # 설계 SSOT
+    └── Prompting/             # 워크플로 transcript
+  layer_to_path:
+    boundary: src/boundary/
+    control: src/control/
+    entity: src/entity/
+    tests_entity: tests/entity/
+    tests_boundary: tests/boundary/
+
+################################################################################
+ai_behavior:
+  before_coding:
+    - 관련 tests/ 파일과 Report 테스트 ID(D-*, U-*)를 먼저 확인한다
+    - 수정 대상이 어느 ECB 레이어(boundary/control/entity)인지 명시한다
+    - tdd_rules 현재 phase(red/green/refactor)를 응답 시작부에 선언한다
+    - RED phase라면 production 코드 작성 전 테스트만 제안한다
+  during_coding:
+    - ECB 레이어 경계 위반 import·책임 혼합을 생성하지 않는다
+    - 모든 public 함수·메서드에 type hints와 Google docstring을 포함한다
+    - max_line_length 88, PEP8, Black 호환 코드를 작성한다
+    - forbidden 섹션의 pattern을 코드에 포함하지 않는다
+    - Dual-Track에 맞게 Mock 사용 여부를 테스트 종류에 맞게 적용한다
+  after_coding:
+    - pytest 실행을 제안하거나 수행하고 결과를 보고한다
+    - tdd_rules 위반 가능성이 있으면 응답에 "⚠ TDD 위반 경고:" 로 시작하는 경고를 출력한다
+    - 커버리지 80% 미만이면 refactor 또는 테스트 보강을 제안한다
+  must_not:
+    - 타입힌트 없는 public 함수 생성
+    - RED 확인 없이 src/ production 코드 추가
+    - 테스트 assert 약화로 GREEN 달성
+    - entity 레이어에 print(), input(), CLI 코드 배치

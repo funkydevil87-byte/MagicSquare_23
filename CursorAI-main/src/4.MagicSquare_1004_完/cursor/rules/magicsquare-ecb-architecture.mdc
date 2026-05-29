@@ -1,0 +1,58 @@
+---
+description: ECB 3레이어 정의·의존성 방향·권장 폴더 트리
+alwaysApply: true
+---
+
+# ECB 아키텍처 (MagicSquare)
+
+## 레이어
+
+### Boundary — 외부 입출력
+
+- **역할**: UI, API, CLI 등 외부와의 접점
+- **포함**: 콘솔·웹·데스크톱 UI, HTTP/gRPC 등 API, CLI
+- **금지**: 도메인 규칙·유스케이스 분기를 여기서 구현하지 말 것(위임만)
+
+### Control — 비즈니스 로직
+
+- **역할**: 유스케이스·오케스트레이션·애플리케이션 서비스
+- **포함**: 인터랙터·유스케이스 클래스, 트랜잭션 경계·검증·워크플로 조합
+- **의존**: `entity`만(도메인 쪽)
+
+### Entity — 도메인
+
+- **역할**: 도메인 데이터·불변식·순수 도메인 규칙
+- **포함**: 엔티티·값 객체·도메인 서비스(순수 함수)
+- **의존**: 다른 ECB 레이어에 의존하지 않음
+
+## 의존성 방향
+
+- **원칙**: 의존성은 항상 **안쪽(도메인)** 을 향한다.
+- **허용**: `boundary → control → entity`, `control → entity`
+- **금지**:
+  - `entity`가 `control`·`boundary`에 의존
+  - `control`이 `boundary`의 구체(UI/API 어댑터)에 직접 의존 → 인터페이스 주입으로 역전
+
+## 권장 디렉터리 트리(개념)
+
+```text
+src/magicsquare/
+├── boundary/          # UI, API, CLI
+│   ├── api/
+│   ├── cli/
+│   └── ui/
+├── control/
+│   └── use_cases/
+├── entity/
+│   ├── models/
+│   └── services/
+└── __init__.py
+
+tests/
+├── boundary/
+├── control/
+├── entity/
+└── conftest.py
+```
+
+루트 패키지 이름은 저장소에 맞게 바꿀 수 있으나, **ECB 3분할**과 **`tests/` 미러**는 유지한다.

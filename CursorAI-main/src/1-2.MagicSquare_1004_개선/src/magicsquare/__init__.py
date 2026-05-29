@@ -1,0 +1,1 @@
+"""MagicSquare root package."""
