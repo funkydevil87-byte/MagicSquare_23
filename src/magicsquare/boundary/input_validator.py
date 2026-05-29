@@ -8,8 +8,8 @@ from magicsquare.boundary.schemas import (
     GRID_SIZE,
     INVALID_SIZE_CODE,
     INVALID_SIZE_MESSAGE,
+    FailureResult,
 )
-from tests.boundary.conftest import FailureResult
 
 
 class InputValidator:
