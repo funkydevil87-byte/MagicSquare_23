@@ -317,7 +317,7 @@ MagicSquare_23/
 
 ### 다음 단계 (REFACTOR 착수 전)
 
-1. README §REFACTOR 단계 To-Do **RF-01~06** (테스트 선행 + High P0)
+1. README §REFACTOR **High 3그룹** 순서: 그룹 1 → 2 → 3
 2. PRD throw vs `FailureResult` SSOT 확정 (RF-DQ-01)
 3. GUI 수동 검증 — `python -m magicsquare.boundary.screen.app`
 
@@ -327,63 +327,53 @@ MagicSquare_23/
 
 > **전제**: GREEN **78 passed** · Golden Master GM-01~10 완료 · REFACTOR = **동작 불변** 구조 개선  
 > **근거**: `Report/17.MagicSquare_ECB_REFACTOR_Planning_Report.md` · `.cursor/rules/magicsquare-tdd-testing.mdc` §REFACTOR  
-> **파일 매핑**: `domain.py` → `control/solve_partial_magic_square.py` · `ui_boundary` → `boundary/magic_square_boundary.py` · `main_window` → `boundary/screen/app.py`
+> **파일 매핑**: `domain.py` → `control/solve_partial_magic_square.py` · `ui_boundary` → `boundary/magic_square_boundary.py` · `main_window` → `boundary/screen/app.py`  
+> **실행 순서**: **그룹 1 → 그룹 2 → 그룹 3** (각 그룹 내 RF-ID 오름차순)
 
-### RF-P0 — 테스트 선행 + 계약·ECB (High)
+### High — 그룹 1: 선행 · REFACTOR 게이트 (Test) ✅
 
-#### RF-01 Screen characterization test (REFACTOR 게이트)
+> 구조 변경 **전** 반드시 선행. 테스트 없이 REFACTOR 금지.
 
-- [ ] **RF-01-01**: `tests/boundary/screen/test_app.py` — `_read_grid()` (빈칸→0, 형식·범위 `ValueError`)
-- [ ] **RF-01-02**: `_display_result()` — `FailureResult` / `list[6]` / unknown 문자열·tone
-- [ ] **RF-01-03**: `on_solve()` — `MagicSquareBoundary` mock 분기
-- [ ] **RF-01-04**: `load_grid()` — 0→빈칸 표시
-- [ ] **RF-01-05**: `pytest tests/boundary/screen/ -q` → GREEN
+- [x] **RF-01-01**: `tests/boundary/screen/test_app.py` — `_read_grid()` (빈칸→0, 형식·범위 `ValueError`)
+- [x] **RF-01-02**: `_display_result()` — `FailureResult` / `list[6]` / unknown 문자열·tone
+- [x] **RF-01-03**: `on_solve()` — `MagicSquareBoundary` mock 분기
+- [x] **RF-01-04**: `load_grid()` — 0→빈칸 표시
+- [x] **RF-01-05**: `pytest tests/boundary/screen/ -q` → GREEN (**13 passed**)
 
-#### RF-02 Boundary 실패 신호 단일화
+### High — 그룹 2: 계약 · E001~E007 · 검증 SSOT (Contract)
+
+> 외부 API·Error Code·입력 검증 드리프트 방지. 계약 깨짐 리스크 최대.
 
 - [ ] **RF-02-01**: E001~E005 — `FailureResult` 반환 → PRD §13 **예외 throw** (code/message 동일)
 - [ ] **RF-02-02**: E006 `UNSOLVABLE` — `UnsolvableError` 매핑 유지
 - [ ] **RF-02-03**: `test_u_*` · AC-FR-01-01 · Golden Master 회귀 GREEN
+- [ ] **RF-06-01**: `input_validator` — `bool` 셀 거부 (`type(value) is int`)
+- [ ] **RF-06-02**: `16` → Entity `CELL_MAX` SSOT
+- [ ] **RF-06-03**: `test_u_in_04_*` + bool·범위 경계 테스트 GREEN
 
-#### RF-03 Boundary → Entity import 제거
+### High — 그룹 3: 구조 · ECB 레이어 분리 (Architecture)
+
+> Control/Boundary/Screen에 섞인 Entity·직렬화 책임 분리. Attempt·`int[6]` 회귀 주의.
 
 - [ ] **RF-03-01**: `UnsolvableDomainError` catch → `control/magic_square_solver.py`로 이동
-- [ ] **RF-03-02**: `magic_square_boundary.py` — `boundary→control`만 의존
-
-#### RF-04 Control `_attempt` → Entity `two_cell_solver`
-
-- [ ] **RF-04-01**: `entity/services/two_cell_solver.py` 추출 (complete+validate 시도)
-- [ ] **RF-04-02**: `solve_partial_magic_square.execute` — Attempt 1/2 순서만
+- [ ] **RF-03-02**: `magic_square_boundary.py` — Entity import 제거 (`boundary→control`만)
+- [ ] **RF-04-01**: `_attempt` → `entity/services/two_cell_solver.py` 추출 (complete+validate 시도)
+- [ ] **RF-04-02**: `solve_partial_magic_square.execute` — Attempt 1/2 **순서만**
 - [ ] **RF-04-03**: `tests/entity/test_two_cell_solver.py` · D-SOL-01~04/22 GREEN
-
-#### RF-05 `int[6]` — `boundary/result_formatter.py`
-
-- [ ] **RF-05-01**: SolutionVector → `int[6]` 조립 SSOT
+- [ ] **RF-05-01**: `int[6]` → `boundary/result_formatter.py` SSOT
 - [ ] **RF-05-02**: Screen `_display_result` — Formatter 위임
 - [ ] **RF-05-03**: `tests/boundary/test_result_formatter.py` GREEN
 
-#### RF-06 `input_validator` SSOT
+### Medium / Low — High 3그룹 완료 후 (RF-07~RF-17)
 
-- [ ] **RF-06-01**: `bool` 셀 거부 (`type(value) is int`)
-- [ ] **RF-06-02**: `16` → Entity `CELL_MAX`
-- [ ] **RF-06-03**: `test_u_in_04_*` + bool 경계 테스트 GREEN
+> 상세·전체 17건 목록: [`Report/17`](Report/17.MagicSquare_ECB_REFACTOR_Planning_Report.md) §8
 
-### RF-P1 — Screen·테스트 구조 (High~Medium)
-
-- [ ] **RF-07**: `app.py` `_read_grid` — parse-only, E004는 Boundary 위임
-- [ ] **RF-08**: `app.py` `_display_result` — result_formatter 위임
-- [ ] **RF-09**: `tests/control/test_solve_partial_magic_square.py` — ECB 미러링
-- [ ] **RF-10**: `execute` Attempt 1/2 — `Extract Method` DRY
-- [ ] **RF-11**: `SAMPLE_G1`/`SAMPLE_COMPLETE` → `tests/conftest` 또는 fixtures
-- [ ] **RF-12**: rename — `ui_boundary.py` / `main_window.py` (동작 불변)
-
-### RF-P2 — 정리 (Medium~Low)
-
-- [ ] **RF-13**: `MagicSquareSolver` pass-through 축소
-- [ ] **RF-14**: `GRID_SIZE` SSOT — Entity `constants` 단일화
-- [ ] **RF-15**: `app.py` `_build_layout` Extract Method
-- [ ] **RF-16**: `solve_partial_magic_square.py` unused `Any` 제거
-- [ ] **RF-17**: `schemas.INVALID_SIZE` 레거시 정리
+| RF-ID | 요약 |
+|-------|------|
+| RF-07~08 | Screen `_read_grid` / `_display_result` Boundary 위임 |
+| RF-09~10 | `tests/control/` 미러링 · Attempt DRY |
+| RF-11~12 | SAMPLE fixture 이동 · `ui_boundary`/`main_window` rename |
+| RF-13~17 | pass-through·GRID_SIZE SSOT·`_build_layout`·dead code 정리 |
 
 ### REFACTOR 회귀 게이트 (매 단계 후)
 
@@ -474,6 +464,7 @@ python -m magicsquare.boundary.screen.app
 | 2026-05-29 | GREEN-W3/W4 완료 · AC-FR-01-01 **29/29** passed · Control `MagicSquareSolver` 스텁 |
 | 2026-05-29 | Golden Master GM-01~GM-10 · Report/16 · Prompting/13 · 78 tests passed |
 | 2026-05-29 | ECB REFACTOR 계획 · README §REFACTOR TODO RF-01~17 · Report/17 · Prompting/14 |
+| 2026-05-29 | README §REFACTOR — High 3그룹( Test → Contract → Architecture ) 요약 정리 |
 
 ---
 
