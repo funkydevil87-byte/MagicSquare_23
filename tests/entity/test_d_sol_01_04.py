@@ -1,53 +1,71 @@
-"""D-SOL-01~04 — SolvePartialMagicSquare / solution vector. Track B Control RED skeleton."""
+"""D-SOL-01~04 — SolvePartialMagicSquare / solution vector. Track B Control."""
 
 from __future__ import annotations
 
 import pytest
 
+from magicsquare.control.solve_partial_magic_square import SolvePartialMagicSquare
+from magicsquare.entity.exceptions import UnsolvableDomainError
+from tests.entity.conftest import GRID_G2, GRID_G3, GRID_TD01
+
 
 class TestDSol01StepA:
-    """D-SOL-01 — G1 small-first success vector."""
+    """D-SOL-01 — TD-01 small-first success vector."""
 
-    def test_d_sol_01_g1_step_a_vector(self) -> None:
-        # D-SOL-01
-        # from magicsquare.control.solve_partial_magic_square import SolvePartialMagicSquare
-        # Given: G1 partial grid
-        # solver = SolvePartialMagicSquare()
-        # When: solver.execute(grid_g1) or solve pipeline
-        pytest.fail("RED: D-SOL-01 — G1 returns [2,2,7,3,3,10] Step A (I8)")
+    def test_d_sol_01_td01_step_a_vector(self) -> None:
+        # Arrange
+        solver = SolvePartialMagicSquare()
+
+        # Act
+        result = solver.execute(GRID_TD01)
+
+        # Assert
+        assert result == [1, 2, 3, 1, 4, 13]
 
 
 class TestDSol02StepB:
-    """D-SOL-02 — G2 reverse-only success (fixture TBD)."""
+    """D-SOL-02 — G2 reverse-only success."""
 
     def test_d_sol_02_g2_reverse_vector(self) -> None:
-        # D-SOL-02
-        # from magicsquare.control.solve_partial_magic_square import SolvePartialMagicSquare
-        # Given: G2 (TD-02) partial grid; design lock [1,1,16,1,2,3]
-        # solver = SolvePartialMagicSquare()
-        # When: solver.execute(grid_g2)
-        pytest.fail("RED: D-SOL-02 — G2 TBD")
+        # Arrange
+        solver = SolvePartialMagicSquare()
+
+        # Act
+        result = solver.execute(GRID_G2)
+
+        # Assert
+        assert result == [1, 1, 16, 1, 2, 3]
 
 
 class TestDSol03Unsolvable:
     """D-SOL-03 — G3 both combinations fail."""
 
     def test_d_sol_03_g3_unsolvable_domain_error(self) -> None:
-        # D-SOL-03
-        # from magicsquare.control.solve_partial_magic_square import SolvePartialMagicSquare
-        # Given: G3 placeholder grid (both attempts invalid)
-        # solver = SolvePartialMagicSquare()
-        # When: solver.execute(grid_g3)
-        pytest.fail("RED: D-SOL-03 — G3 raises UnsolvableDomainError (I10)")
+        # Arrange
+        solver = SolvePartialMagicSquare()
+
+        # Act / Assert
+        with pytest.raises(UnsolvableDomainError):
+            solver.execute(GRID_G3)
 
 
 class TestDSol04OutputShape:
-    """D-SOL-04 — G1 output contract (len=6, 1-index)."""
+    """D-SOL-04 — TD-01 output contract (len=6, 1-index)."""
 
-    def test_d_sol_04_g1_output_length_and_indexing(self) -> None:
-        # D-SOL-04
-        # from magicsquare.control.solve_partial_magic_square import SolvePartialMagicSquare
-        # Given: G1 partial grid
-        # solver = SolvePartialMagicSquare()
-        # When: solver.execute(grid_g1) → int[6]
-        pytest.fail("RED: D-SOL-04 — G1 solution len=6, coords 1-index (I8, BR-14/15)")
+    def test_d_sol_04_td01_output_length_and_indexing(self) -> None:
+        # Arrange
+        solver = SolvePartialMagicSquare()
+
+        # Act
+        result = solver.execute(GRID_TD01)
+
+        # Assert
+        assert len(result) == 6
+        r1, c1, n1, r2, c2, n2 = result
+        assert 1 <= r1 <= 4
+        assert 1 <= c1 <= 4
+        assert 1 <= r2 <= 4
+        assert 1 <= c2 <= 4
+        assert 1 <= n1 <= 16
+        assert 1 <= n2 <= 16
+        assert n1 != n2
